@@ -66,6 +66,7 @@ const VehicleRegistrationForm = () => {
           borderRadius="lg" 
           boxShadow="md"
         >
+
           {/* <HStack>
           <Stepper index={activeStep} mb={4}>
                 {steps.map((step, index) => (
