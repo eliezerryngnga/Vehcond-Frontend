@@ -4,14 +4,14 @@ import { request } from "../components/utils/request";
 // GET: Menu Links
 const fetchMenuLinks = () => {
   return request({
-    url: `/menu?roleCode=${rolecode}`,
+    url: `/menu`,
     method: "get",
   });
 };
 
-export const useFetchMenuLinks = (rolecode) => {
+export const useFetchMenuLinks = () => {
   return useQuery({
-    queryKey: ["fetch-menu-links", rolecode],
-    queryFn: () => fetchMenuLinks(rolecode),
+    queryKey: ["fetch-menu-links"],
+    queryFn: () => fetchMenuLinks(),
   });
 };

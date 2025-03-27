@@ -1,5 +1,5 @@
 
-import { Box, Heading, HStack, Link, Stack, Text } from "@chakra-ui/react";
+import { Box, Collapse, Heading, HStack, Link, Stack, Text } from "@chakra-ui/react";
 
 import { Link as RouterLink, NavLink } from "react-router-dom";
 
@@ -7,16 +7,38 @@ import { useFetchMenuLinks } from "../../../hooks/uiQueries";
 
 import MdIcon from "../../core/MdIcon";
 
-import { MdDirectionsCar, MdHome } from "react-icons/md";
+import { MdArrowDropDown, MdDirectionsCar, MdHome, MdArrowRight } from "react-icons/md";
+import { useState } from "react";
 
-const UsersSidebar = ({ profile, rolecode }) => {
-  
+const UsersSidebar = ({ profile }) => {
+
+
+
   // Queries
-  const menuQuery = useFetchMenuLinks(rolecode);
+  const menuQuery = useFetchMenuLinks();
 
   const sortedMenu = menuQuery?.data?.data?.sort(
     (a, b) => a.sortOrder - b.sortOrder
   );
+
+  const[openSubmenu, setOpenSubMenu] = useState({});
+
+  const toggleSubMenu = (urlCode) =>
+  {
+    setOpenSubMenu((prev) => ({
+      ...prev,
+      [urlCode] : !prev[urlCode],
+    }));
+  };
+
+  const handleLinkClick = (event, link) => 
+  {
+    if(link.subProcessName)
+    {
+      event.preventDefault();
+      toggleSubMenu(link.urlCode);
+    }
+  }
 
   return (
     <Stack
@@ -55,45 +77,95 @@ const UsersSidebar = ({ profile, rolecode }) => {
         </Box>
 
         {/* Menu */}
-        <Stack spacing={1} px={4}>
-        
-          {menuQuery.isLoading && <Text>Loading...</Text>}  {/* Show loading text when data is fetching */}
-          {menuQuery.isError && <Text>Error fetching menu links</Text>}  {/* Show error text if fetch fails */}
-          {!menuQuery.isLoading && !menuQuery.isError && sortedMenu?.length === 0 && <Text>No menu items available</Text>}  {/* Show message if no menu items */}
-          
-          {sortedMenu?.map((link) => (
-            <Link
-              key={link.url}
-              as={NavLink}
-              variant="sidebar"
-              to={link.url}
-              _hover={{
-                textDecor: "none", 
-                color: "blue.500", 
-              }}
-              _active={{
-                textDecor: "none", 
-                color: "blue.500", 
-              }}
-              _focus={{
-                outline: "none", 
-              }}
-              _visited={{
-                color: "gray.600",
-              }}
-            >
-              <HStack>
-
-                <MdIcon iconName={link.icon} color="gray.600" _hover={{ color: "blue.500" }} />
-                
-                <Text color="gray.600" _hover={{ color: "blue.500" }}>
-                  {link.label}
-                </Text>
+        <Stack spacing={1} px={4} mt={10}>
+          {sortedMenu?.map((link) => link.showInMenu ? (
+            <Box key={link.urlCode}>
               
-              </HStack>
+                <Link                
+                as={NavLink}
+                variant="sidebar"
+                to={link.pageurl}
+                onClick={(e) => handleLinkClick(e, link)}
+                
+                _hover={{
+                  textDecor: "none", 
+                  color: "blue.500", 
+                }}
+                _active={{
+                  textDecor: "none", 
+                  color: "blue.500", 
+                }}
+                _focus={{
+                  outline: "none", 
+                }}
+                _visited={{
+                  color: "gray.600",
+                }}
+              >
+                <HStack>
+
+                  {/* Icons */}
+                  <MdIcon iconName={link.processIcon} color="gray.600" _hover={{ color: "blue.500" }} />
+                  
+                  {/* Link Label */}
+                  <Text color="gray.600" _hover={{ color: "blue.500" }}>
+                    {link.processName}
+                  </Text>
+                  {/* <MdArrowRight /> */}
+
+                  {/* Drop down icon */}
+                  {link.subProcessName && (
+                    <Box ml="auto">
+                      {openSubmenu[link.urlCode] ? (<MdArrowDropDown />) : (<MdArrowRight />)}
+                    </Box>
+                  )}
+                </HStack>
+              </Link>
+
+              {/* Display submenu if exist and is open */}
+              {link.subProcessName && (
+                <Collapse in={openSubmenu[link.urlCode]}>
+                  <Stack spacing={1} pl={6} mt={2}>
+                    <Link
+                      key={link.subProcessName}
+                      as={NavLink}
+                      variant="sidebar"
+                      to={`${link.pageurl}/${link.subProcessName}`}
+                      _hover={{
+                        textDecor: "none", 
+                        color: "blue.500", 
+                      }}
+                      _active={{
+                        textDecor: "none", 
+                        color: "blue.500", 
+                      }}
+                      _focus={{
+                        outline: "none", 
+                      }}
+                      _visited={{
+                        color: "gray.600",
+                      }}
+                    >
+                      <HStack>
+
+                        {/* Sub Process Icon */}
+                        <MdIcon iconName={link.processIcon} color="gray.600" _hover={{ color: "blue.500" }} />
+                        <Text color="gray.600" _hover={{ color: "blue.500" }}>
+                          {link.subProcessName}
+                        </Text>
+                      </HStack>
+                    </Link>
+                  </Stack>
+                </Collapse>
+              )
+
+              }
+
+
+            </Box>
             
-            </Link>
-          ))}
+          ) : null
+        )}
         </Stack>
       </Stack>
     </Stack>
