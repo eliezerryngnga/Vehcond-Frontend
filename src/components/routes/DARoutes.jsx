@@ -69,7 +69,7 @@ const DARoutes = () => {
           
         </Stack>
         <Stack spacing={10} w="full" ml={{base: 0, lg: 60}}>
-          <Footer />
+          {/* <Footer /> */}
         </Stack>
       </Stack>
       

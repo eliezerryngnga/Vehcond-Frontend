@@ -23,7 +23,7 @@ const App = () => {
       <Route path="/da" element={<DARoutes />}>
         {/* Dashboard */}
         <Route path="dashboard" element={<DADashboardPage />} />
-        <Route path="vehicle-entry" element={<VehicleRegistrationForm />} />
+        <Route path="dataentryvehicle" element={<VehicleRegistrationForm />} />
 
         {/* Profile */}
         <Route path="profile" element={<UserProfilePage />} />

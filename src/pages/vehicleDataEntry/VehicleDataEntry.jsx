@@ -1,121 +1,100 @@
-import { useState } from "react";
-
-import {
-  Box,
+import { 
+  Stepper, 
+  Step, 
+  StepIndicator, 
+  StepSeparator, 
+  StepTitle, 
+  StepDescription, 
+  StepIcon, 
+  StepNumber, 
+  StepStatus, 
   Button,
-  Stepper,
-  Step,
-  StepIndicator,
-  StepStatus,
-  StepIcon,
-  StepNumber,
-  StepTitle,
-  StepDescription,
-  StepSeparator,
-  useSteps,
-  Divider,
-  HStack,
-  Select,
-  Text,
-
+  Box,
+  Stack,
 } from "@chakra-ui/react";
 
-import InputField from "../../components/core/formik/InputField";
-import RadioGroup from "../../components/core/formik/RadioGroupField";
-import SelectField from "../../components/core/formik/SelectField";
-import TextAreaField from "../../components/core/formik/TextAreaField";
+import OfficeRecords from "./OfficeRecords";
+import  VehicleInformation from "./VehicleInformation";
+import VehicleCondem from "./VehicleCondem";
 
-import { Form, Formik } from "formik";
-
-import * as yup from "yup";
-
-const steps = [
-  { title: 'First', description: 'Office Records' },
-  { title: 'Second', description: 'Vehicle Basic details' },
-  { title: 'Third', description: 'Vehicle Usage And Maintenance History' },
-];
-
-// const validationSchema = [
-//   yup.object({
-//     step1Field: Yup.string().required("Step 1 field is required"),
-//   }),
-
-//   yup.object({
-//     step2Field: yup.string().required("Step 2 field is required"),
-//   }),
-
-//   yup.object({
-//     step3Field: yup.string().required("Step 3 field is required"),
-//   }),
-// ];
+import { useState } from "react";
 
 const VehicleRegistrationForm = () => {
-  const { activeStep, nextStep, prevStep, setActiveStep } = useSteps({
-    index: 0,
-    count: steps.length,
-  });
+  const [step, setStep] = useState(0);
 
-  return (
+    const steps = [
+        { title: "Step 1", description: "This is step 1" },
+        { title: "Step 2", description: "This is step 2" },
+        { title: "Step 3", description: "This is step 3" },
+    ];
 
-        <Box 
-          mt={6} 
-          p={10} 
-          maxW="800px"
-          mx="auto"
-          bg="white" 
-          borderRadius="lg" 
-          boxShadow="md"
-        >
+    const handleNext = () => {
+        setStep((prev) => Math.min(prev + 1, steps.length - 1));
+    };
 
-          {/* <HStack>
-          <Stepper index={activeStep} mb={4}>
-                {steps.map((step, index) => (
-                  <Step key={index}>
-                    <StepIndicator>
-                      <StepStatus
-                        complete={<StepIcon color="green.500" />}
-                        incomplete={<StepNumber />}
-                        active={<StepNumber color="blue.500" />}
-                      />
-                    </StepIndicator>
+    const handlePrev = () => {
+        setStep((prev) => Math.max(prev - 1, 0));
+    };
 
-                    <Box flexShrink="0">
-                      <StepTitle fontSize="lg" fontWeight="semibold" color="gray.800">
-                        {step.title}
-                      </StepTitle>
-                      <StepDescription color="gray.600">{step.description}</StepDescription>
-                    </Box>
+    const renderContent = (currentStep) => {
+      switch(currentStep)
+      {
+        case 0:
+          return <OfficeRecords />
+        case 1:
+          return <VehicleInformation />
+        case 2:
+          return <VehicleCondem />
+        default:
+          return 
+      }
+    }
 
-                    <StepSeparator />
-                  </Step>
+    return (
+          <Box
+            bg="paper "
+            w="auto"
+            p={6} 
+            m={4} 
+            borderRadius="md"
+          >
+            <Stack> 
+            <Stepper index={step}>
+                {steps.map((s, index) => (
+                    <Step key={index}>
+                        <StepIndicator>
+                            <StepStatus
+                                complete={<StepIcon />}
+                                incomplete={<StepNumber />}
+                                active={<StepNumber />}
+                            />
+                        </StepIndicator>
+                          <Box flexShrink={0}>
+                            <StepTitle>{s.title}</StepTitle>
+                            <StepDescription>{s.description}</StepDescription>
+                          </Box>
+                        <StepSeparator />
+                    </Step>
                 ))}
+
+                
+                    
             </Stepper>
-            
-            <Divider />
-          </HStack> */}
-            
 
-            <Box> 
+                <Box mt={4}>{renderContent(step)}</Box>
 
-            </Box>
-          {/* Navigation Buttons */}
-          {/* <Box display="flex" justifyContent="space-between" mt={6}>
-            <Button onClick={prevStep} isDisabled={activeStep === 0} colorScheme="blue">
-              Previous
-            </Button>
-            <Button onClick={nextStep} isDisabled={activeStep === steps.length - 1} colorScheme="blue">
-              Next
-            </Button>
-          </Box> */}
-
-          {/* Step Content (Optional) */}
-          {/* <Box mt={6} p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-            {activeStep === 0 && <p>Step 1 Content: Contact Info</p>}
-            {activeStep === 1 && <p>Step 2 Content: Date & Time</p>}
-            {activeStep === 2 && <p>Step 3 Content: Select Rooms</p>}
-          </Box> */}
-        </Box>
-  );
+                <Box>
+                  <Button onClick={handlePrev} isDisabled={step === 0}>
+                      Previous
+                  </Button>
+                  <Button onClick={handleNext} isDisabled={step === steps.length - 1}>
+                    Save & Next
+                  </Button>
+                </Box>
+            </Stack>
+          </Box>
+    );
 };
+
 
 export default VehicleRegistrationForm;

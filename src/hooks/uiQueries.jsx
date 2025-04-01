@@ -12,6 +12,6 @@ const fetchMenuLinks = () => {
 export const useFetchMenuLinks = () => {
   return useQuery({
     queryKey: ["fetch-menu-links"],
-    queryFn: () => fetchMenuLinks(),
+    queryFn:   fetchMenuLinks,
   });
 };

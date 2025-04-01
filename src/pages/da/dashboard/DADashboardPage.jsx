@@ -44,8 +44,6 @@ const DADashboardPage = ({profile}) => {
           />*/}
           {/*<DataTableContainer /> */}
 
-          
-
           <Box bg={"blue.50"}>
             <TableContainer bg="black" />
           </Box>
