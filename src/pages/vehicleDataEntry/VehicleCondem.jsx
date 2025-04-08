@@ -1,94 +1,120 @@
-import React from 'react'
+import React from 'react';
 
-import {Form, Formik} from "formik";
-import * as yup from "yup";
+import {
+    Stack,
+    Radio,
+    HStack
+} from '@chakra-ui/react';
+
 import InputField from '../../components/core/formik/InputField';
-import { Input, Radio } from '@chakra-ui/react';
 import TextAreaField from '../../components/core/formik/TextAreaField';
 import RadioGroupField from '../../components/core/formik/RadioGroupField';
 
-const VehicleCondem = () => {
+// Assuming PartsCondition is another component you've created
+import PartsCondition from './PartsCondition'; // Adjust the import path
 
-    const officeDetails = yup.object({
-        totalKmLogged: yup
-            .string()
-            .required("Cannot be blank"),
-        dpreciatedValueOfVeh: yup
-    .string()
-    .required("Cannot be blank"),
-        improvFilmentmade: yup
-    .string()
-    .required("Cannot be blank"),
-        totalExpendOfPol: yup
-    .string()
-    .required("Cannot be blank"),
-        totalExpendMaintenance: yup
-    .string()
-    .required("Cannot be blank"),
-        repairsBeforeCondem: yup
-    .string()
-    .required("Cannot be blank"),
-        vehicleHasAccident: yup
-    .string()
-    .required("Cannot be blank"),
-        caseInAccident: yup
-    .string()
-    .required("Cannot be blank"),
-        commentsOfDeptOfficer: yup
-    .string()
-    .required("Cannot be blank"),
-        MviReport: yup
-    .string()
-    .required("Cannot be blank"),
-      });
-    
-      const initialValues = {
-        totalKmLogged: "",
-        dpreciatedValueOfVeh: "",
-        improvFilmentmade: "",
-        totalExpendOfPol: "",
-        totalExpendMaintenance: "",
-        repairsBeforeCondem: "",
-        vehicleHasAccident: "",
-        caseInAccident: "",
-        commentsOfDeptOfficer: "",
-        MviReport: "",
-      }
-  return (
-    <Formik>
-        <Form>
-            <InputField name="totalKmLogged" label="Total Kilometers logged"/>
-            <InputField name="dpreciatedValueOfVeh" label="Depreciated value of the vehicle"/>
-            
+const VehicleCondem = ({ values, handleMviReportChange }) => {
+    return (
+        <Stack spacing={4}>
+            <InputField
+                name="totalKmLogged"
+                label="Total Kilometers logged"
+            />
+
+            <InputField
+                name="dpreciatedValueOfVeh"
+                label="Depreciated value of the vehicle"
+            />
+
             <TextAreaField
                 name="improvFilmentmade"
-                label="Improvement or additional fitments made, if any, and cost thereof"/>
+                label="Improvement or additional fitments made, if any, and cost thereof"
+                isRequired={false}
+            />
 
-            <InputField name="totalExpendOfPol" label="Total expenditure incurred in respect of P.O.L, if borne by the Government" />
+            <InputField
+                name="totalExpendOfPol"
+                label="Total expenditure incurred in respect of P.O.L, if borne by the Government"
+            />
 
-            <InputField name="totalExpendMaintenance" label="Total expenditure incurred on maintenance till now"/>
+            <InputField
+                name="totalExpendMaintenance"
+                label="Total expenditure incurred on maintenance till now"
+            />
 
-            <InputField name="repairsBeforeCondem" label="Repairs(costing over Rs. 1,000) undertaken during the last 6(six) months before the proposal for condemnation or before the vehicle was shut down"/>
+            <InputField
+                name="repairsBeforeCondem"
+                label="Repairs(costing over Rs. 1,000) undertaken during the last 6(six) months before the proposal for condemnation or before the vehicle was shut down"
+            />
 
-            <RadioGroupField name="vehicleHasAccident" label="Whether the vehicle has met with an accident">
-                <Radio value='yes'>Yes</Radio>
-                <Radio value='no'>No</Radio>
+            <RadioGroupField
+                name="vehicleHasAccident"
+                label="Whether the vehicle has met with an accident"
+            >
+                <HStack>
+                    <Radio value="yes">Yes</Radio>
+                    <Radio value="no">No</Radio>
+                </HStack>
             </RadioGroupField>
-            
-            <RadioGroupField name="caseInAccident" label="If yes, whether the case in connection with the accident has been settled">
-                <Radio value='yes'>Yes</Radio>
-                <Radio value='no'>No</Radio>
+
+            {values.vehicleHasAccident === 'yes' && (
+                <RadioGroupField
+                    name="caseInAccident"
+                    label="If yes, whether the case in connection with the accident has been settled"
+                >
+                    <Radio value="yes">Yes</Radio>
+                    <Radio value="no">No</Radio>
+                </RadioGroupField>
+            )}
+
+            <TextAreaField
+                name="commentsOfDeptOfficer"
+                label="Views/Comments of the Departmental officer"
+            />
+
+            <RadioGroupField
+                name="MviReport"
+                label="Is MVI Report Available? (Y/N)"
+                onChange={(event) => handleMviReportChange(event.target.value)} // Ensure the event value is passed
+            >
+                <HStack>
+                    <Radio value="yes">Yes</Radio>
+                    <Radio value="no">No</Radio>
+                </HStack>
             </RadioGroupField>
 
-            <TextAreaField name="commentsOfDeptOfficer" label="Views/Comments of the Departmental officer"/>
+            {values.MviReport === 'yes' && (
+                <>
+                    <PartsCondition />
 
-            <RadioGroupField name="MviReport" label="Is MVI Report Available? (Y/N)">
-                <Radio value='yes'>Yes</Radio>
-                <Radio value='no'>No</Radio>
-            </RadioGroupField>
-        </Form>
-    </Formik>
-  )
-}
+                    <InputField
+                        name="battery"
+                        label="Battery Condition"
+                    />
+                    <InputField
+                        name="tyres"
+                        label="Tyres Condition"
+                    />
 
-export default VehicleCondem
+                    <TextAreaField
+                        name="accidentDamage"
+                        label="Accident damage of vehicle (from history sheet)"
+                        isRequired={false}
+                    />
+
+                    <InputField
+                        name="mviPrice"
+                        label="MVI's assessment of current value"
+                    />
+
+                    <TextAreaField
+                        name="mviRemarks"
+                        label="Views/Comments of the MVI officer"
+                    />
+                </>
+            )}
+        </Stack>
+    );
+};
+
+export default VehicleCondem;

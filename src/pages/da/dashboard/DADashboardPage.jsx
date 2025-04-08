@@ -12,8 +12,6 @@ import TableContainer from "../../../components/core/Table";
 import DataTableContainer from "../../../components/core/DataTable";
 //import DAPendingApplicationTableWrapper from "./DAPendingApplicationTableWrapper";
 
-import VehicleDataEntry from "../../vehicleDataEntry/VehicleDataEntry";
-
 const DADashboardPage = ({profile}) => {
   // States
   const [pageNumber, setPageNumber] = useState(0);

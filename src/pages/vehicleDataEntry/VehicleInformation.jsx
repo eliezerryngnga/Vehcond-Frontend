@@ -1,81 +1,82 @@
-import React from 'react'
-
+import React from 'react';
 import { Stack } from "@chakra-ui/react";
 
-import { Form, Formik } from "formik";
-
-import * as yup from "yup";
 import SelectField from '../../components/core/formik/SelectField';
 import InputField from '../../components/core/formik/InputField';
 import TextAreaField from '../../components/core/formik/TextAreaField';
+
+import { useFetchVehicleType, useFetchVehicleManufacturer } from "../../hooks/dataEntryQueries";
+import DatePickerField from '../../components/core/formik/DatePickerField';
+
 const VehicleInformation = () => {
 
-    const initialValues = {
-        vehicleCategory : "",
-        descriptOfVehicle : "",
-        vehicleManufacturer : "",
-        engineNumber : "",
-        chassisNumber : "",
-        yearOfManufacturer : "",
-        dateOfPurchase : "",
-        vehiclePurchasePrice : "",
-    }
-
-    const vehInfoValidation = yup.object ({
-        vehicleCategory : yup
-              .string()
-              .required("Cannot be blank"),
-        descriptOfVehicle : yup
-              .string()
-              .required("Cannot be blank"),
-        vehicleManufacturer : yup
-              .string()
-              .required("Cannot be blank"),
-        engineNumber : yup
-                .string()
-                .required("Cannot be blank"),
-        chassisNumber : yup
-            .string()
-            .required("Cannot be blank"),
-        yearOfManufacturer : yup
-            .string()
-            .required("Cannot be blank"),
-        dateOfPurchase : yup
-            .string()
-            .required("Cannot be blank"),
-        vehiclePurchasePrice : yup
-            .string()
-            .required("Cannot be blank"),
-    })
+    const vehicleType = useFetchVehicleType();
+    const sortedVehicleType = vehicleType?.data?.data;
     
-  return (
-    <Formik
-        initialValues={initialValues}
-        validationSchema={vehInfoValidation}
-    >
-        <Stack as={Form}>
-            <SelectField name="vehicleCategory" label="Vehicle Category">
+    const vehicleManufacturers = useFetchVehicleManufacturer();
+    const sortedVehicleManufacturer = vehicleManufacturers?.data?.data;
 
+    return (
+        <Stack>
+            <SelectField
+                name="vehicleCategory"
+                label="Vehicle Category"
+                placeholder="Select Vehicle Type"
+            >
+                {/* <option value="">Select Vehicle Type</option> */}
+                {sortedVehicleType?.map((vehicleCategory) => (
+                    <option key={vehicleCategory.vehicleTypeCode} value={vehicleCategory.vehicleTypeCode}>
+                        {vehicleCategory.vehicletypedescription}
+                    </option>
+                ))}
             </SelectField>
 
-            <TextAreaField name="descriptOfVehicle" label="Description of Vehicle"/>
+            <TextAreaField 
+                name="descriptionOfVehicle" 
+                label="Description of Vehicle" 
+            />
 
-            <SelectField name="vehicleManufacturer" label="Vehicle Manufacturer">
+            <SelectField
+                name="vehicleManufacturer"
+                label="Vehicle Manufacturer"
 
+                placeholder="Vehicle Manufacturer Name"
+            >
+                {/* <option value="">Vehicle Manufacturer Name</option> */}
+                {sortedVehicleManufacturer?.map((vehicleManufacturer) => (
+                    <option key={vehicleManufacturer.vehicleManufacturerCode} value={vehicleManufacturer.vehicleManufacturerCode}>
+                        {vehicleManufacturer.vehicleManufacturerName}
+                    </option>
+                ))}
             </SelectField>
 
-            <InputField name="engineNumber" label="Engine Number" placeholder="Max 10 characters Eg. GFTY123V56" />
+            <InputField 
+                name="engineNumber" 
+                label="Engine Number" 
+                placeholder="Max 10 characters Eg. GFTY123V56" 
+             />
+            <InputField 
+                name="chassisNumber" 
+                label="Chassis Number" 
+                placeholder="Max 17 characters Eg. A1B2C3" 
+            />
 
-            <InputField name="chassisNumber" label="Chassis Number" placeholder="Max 17 characters Eg. A1B2C3" />
+            <InputField 
+                name="yearOfManufacturer" 
+                label="Year of manufacturer" 
+            />
 
-            <InputField name="yearOfManufacturer" label="Year of manufacturer"/>
+            <DatePickerField
+                name="dateOfPurchase" 
+                label="Date of purchase" 
+            />
 
-            <InputField name="dateOfPurchase" label="Date of purchase"/>
-
-            <InputField name="vehiclePurchasePrice" label="Vehicle purchase price" />
+            <InputField 
+                name="vehiclePurchasePrice" 
+                label="Vehicle purchase price" 
+            />
         </Stack>
-    </Formik>
-  )
-}
+    );
+};
 
-export default VehicleInformation
+export default VehicleInformation;

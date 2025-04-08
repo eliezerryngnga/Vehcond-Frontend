@@ -6,7 +6,7 @@ import ContactUsPage from './pages/contactUs/ContactUsPage';
 import DARoutes from './components/routes/DARoutes';
 import UserProfilePage from './pages/user/profile/UserProfilePage';
 import DADashboardPage from './pages/da/dashboard/DADashboardPage';
-import VehicleRegistrationForm from './pages/vehicleDataEntry/VehicleDataEntry';
+import VehicleRegistrationForm from './forms/users/VehicleRegistrationForm';
 
 import './App.css'
 

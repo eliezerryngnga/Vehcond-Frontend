@@ -1,123 +1,187 @@
+import React, {
+    useState,
+    useEffect
+} from "react";
 
-import React, { useRef } from 'react'
-
-import { 
-  Box, 
-  Input, 
-  Text,
-  Textarea,
-  useToast, 
-} from '@chakra-ui/react'
-
-import { Form, Formik} from "formik";
-import * as yup from "yup";
-
-import TextAreaField from '../../components/core/formik/TextAreaField';
-import InputField from '../../components/core/formik/InputField';
+import {
+    HStack,
+    Stack
+} from "@chakra-ui/react";
 
 import SelectField from "../../components/core/formik/SelectField";
+import InputField from "../../components/core/formik/InputField";
+import TextAreaField from "../../components/core/formik/TextAreaField";
+import DatePickerField from "../../components/core/formik/DatePickerField";
 
-import CheckBoxField from "../../components/core/formik/CheckBoxField";
+import {
+    useFetchDistrictName,
+    useFetchDistrictRto,
+    useFetchFinancialYear,
+    useFetchDepartment
+} from "../../hooks/dataEntryQueries";
 
-const OfficeRecorsds = () => {
+const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange }) => {
+    const [selectedDistrict, setSelectedDistrict] = useState(values.districtName);
+    const [filteredRto, setFilteredRto] = useState([]);
 
-  const formikRef = useRef();
-  // const toast = useToast();
+    const district = useFetchDistrictName();
+    const sortedDistrict = district?.data?.data;
 
-  const officeDetails = yup.object({
-    districtName: yup
-      .string()
-      .required("Cannot be blank"),
+    const districtRto = useFetchDistrictRto();
+    const sortedDistrictRto = districtRto?.data?.data;
 
-    rtoNo: yup
-    .string()
-    .required("Cannot be blank"),
+    const financialYears = useFetchFinancialYear();
+    const sortedFinancial = financialYears?.data?.data;
 
-    vehicleRegistrationNumber: yup
-      .string()
-      .transform((value) => value.toUpperCase())
-      .required("Cannot be blank"),
+    const department = useFetchDepartment();
+    const sortedDepartment = department?.data?.data;
 
-    // financialYear: yup.string().required("this is required"),
-    // departmentName: yup.string().required("this is required"),
-    // officeName: yup.string().required("this is required"),
-    // officerDesignation: yup.string().required("this is required"),
-    // premises: yup.string().required("this is required"),
-    // address1: yup.string().required("this is required"),
-    // address2: yup.string().required("this is required"),
-    // directorateLetterNo: yup.string().required("this is required"),
-    // directorateLetterDate: yup.string().required("this is required"),
-    // govForwardingLetterNo: yup.string().required("this is required"),
-    // govForwardingLetterDate : yup.string().required("this is required"),
-  });
+    useEffect(() => {
+        if (selectedDistrict && sortedDistrictRto) {
+            const filtered = sortedDistrictRto.filter((rto) => rto.districtCode === parseInt(selectedDistrict));
+            setFilteredRto(filtered);
+            if(!filtered.find(rto => rto.rtoCode === values.rtoNo))
+            {
+                setFieldValue('rtoNo','');
+            }
+        } else {
+            setFilteredRto([]);
+            setFieldValue('rtoNo','');
+        }
+    }, [selectedDistrict, sortedDistrictRto, setFieldValue, values.rtoNo]);
 
-  const initialValues = {
-    districtName: "",
-    rtoNo: "",
-    vehicleRegistrationNumber: "",
-    // financialYear: "",
-    // departmentName: "",
-    // officeName: "",
-    // officerDesignation: "",
-    // premises: "",
-    // address1: "",
-    // address2: "",
-    // directorateLetterNo: "",
-    // directorateLetterDate: "",
-    // govForwardingLetterNo: "",
-    // govForwardingLetterDate : "",
-  }
+    useEffect(() => {
+        setSelectedDistrict(values.districtName);
+    }, [values.districtName]);
 
-  return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={officeDetails}
-      // onSubmit={handleSubmit}
-    >
-      <Form>
-        <Box>
-          <Box>
-              <SelectField name="districtName" label="District where vehicle was registered">
-                <option value="">Select District Name</option>
-                <option value="2022">2022</option>
-              </SelectField>
+    const handleDistrictChange = (e) => {
+        const value = e.target.value;
+        setSelectedDistrict(value);
+        setFieldValue('districtName', value);
+    };
 
-              <SelectField name="rtoNo" label="Vehicle Registration Number">
-              <option value="">Select District </option>
-              </SelectField> 
-              
-              <InputField name="vehicleRegistrationNumber" isRequired={false} />
-              
-              <SelectField name="financilaYear" label="Financial Year">
-                <option value="">Select Financial Year</option>
-              </SelectField>
-              
-              <SelectField name="departmentName" label="Name of Departments to which vehicle belongs to">
+    return (
+        <Stack spacing={4}>
+            {/* District Field */}
+            <SelectField
+                name="districtName"
+                label="District where vehicle was registered"
+                onChange={handleDistrictChange}
+                placeholder="Select District Name"
+            >
+                {sortedDistrict?.map((district) => (
+                    <option key={district.districtCode} value={district.districtCode}>
+                        {district.districtName}
+                    </option>
+                ))}
+            </SelectField>
 
-              </SelectField>
-              
-              <InputField name="officeName" label="Name of the office to which the vehicle belongs" />
-              
-              <InputField name="officerDesignation" label="Designation of officer to which the vehicle is alloted"/>
+            {/* RTO Code and Vehicle Number */}
+            <HStack align="flex-end">
+                <SelectField
+                    name="rtoNo"
+                    label="RTO Code"
+                    placeholder="Select RTO"
+                >
+                    {filteredRto?.map((rto) => (
+                        <option key={rto.districtRtoCode} value={rto.rtoCode}>
+                            {rto.rtoCode}
+                        </option>
+                    ))}
+                </SelectField>
 
-              <TextAreaField name="premises" label="Premises"/>
+                <InputField
+                    name="vehicleRegistrationNumber"
+                    label="Vehicle Number. Example (AA 1023)"
+                    isRequired={false}
+                    onChange={(e) => setFieldValue('vehicleRegistrationNumber', e.target.value.toUpperCase())}
+                    placeholder = "Vehicle Number. Example (AA 1023)"
+                />
+            </HStack>
 
-              <TextAreaField name="address1" label="Address 1"/>
+            {/* Financial Year */}
+            <SelectField
+                name="financialYear"
+                label="Financial Year"
+                placeholder="Select Financial Year"
+            >
+                {sortedFinancial?.map((financialYear) => (
+                    <option key={financialYear.financialYearCode} value={financialYear.financialYearCode}>
+                        {financialYear.financialYearFrom} - {financialYear.financialYearTo}
+                    </option>
+                ))}
+            </SelectField>
 
-              <TextAreaField name="address2" label="Address 2" />
+            {/* Department Name */}
+            <SelectField
+                name="departmentName"
+                label="Name of Departments to which vehicle belongs to"
+                isDisabled
+                bg="gray.300"
+            >
+                {sortedDepartment?.map((departmentName) => (
+                    <option key={departmentName.departmentCode} value={departmentName.departmentCode}>
+                        {departmentName.departmentName}
+                    </option>
+                ))}
+            </SelectField>
 
-              <InputField name="directorateLetterNo" label="Directorate letter no"/>
+            {/* Office Name */}
+            <InputField
+                name="officeName"
+                label="Name of the office to which the vehicle belongs"
+            />
 
-              <InputField name="directorateLetterDate" label="Directorate letter Date"/>
-              
-              <InputField name="govForwardingLetterNo" label="Govt. forwarding letter no"/>
-              
-              <InputField name="govForwardingLetterDate" label="Govt. forwarding letter date"/>
-          </Box>
-        </Box>
-      </Form>
-    </Formik>
-  )
-}
+            {/* Office Designation */}
+            <InputField
+                name="officerDesignation"
+                label="Designation of officer to which the vehicle is allocated"
+            />
 
-export default OfficeRecorsds;
+            {/* Premises */}
+            <TextAreaField
+                name="premises"
+                label="Premises"
+            />
+
+            {/* Address 1 */}
+            <TextAreaField
+                name="address1"
+                label="Address 1"
+            />
+
+            {/* Address 2 */}
+            <TextAreaField
+                name="address2"
+                label="Address 2"
+                isRequired={false}
+            />
+
+            {/* Directorate Letter Number */}
+            <InputField
+                name="directorateLetterNo"
+                label="Directorate letter no"
+            />
+
+            {/* Directorate Letter Date */}
+            <DatePickerField
+                name="directorateLetterDate"
+                label="Directorate letter Date"
+            />
+
+            {/* Government Forwarding Letter Number */}
+            <InputField
+                name="forwardingLetterNo"
+                label="Govt. forwarding letter no"
+            />
+
+            {/* Government Forwarding Letter Date */}
+            <DatePickerField
+                name="govForwardingLetterDate"
+                label="Govt. forwarding letter date"
+            />
+        </Stack>
+    );
+};
+
+export default OfficeRecords;
