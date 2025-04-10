@@ -31,7 +31,7 @@ import dayjs from "dayjs";
 
 import { useField } from "formik";
 
-const DatePickerField = ({ label, ...props }) => {
+const DatePickerField = ({ label, isRequired = true, ...props }) => {
     const [field, meta, helpers] = useField(props);
     const [isOpen, setIsOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState(
@@ -127,7 +127,7 @@ const DatePickerField = ({ label, ...props }) => {
     ));
 
     return (
-        <FormControl isInvalid={!!(meta.touched && meta.error)}>
+        <FormControl isRequired={isRequired} isInvalid={!!(meta.touched && meta.error)}>
             <FormLabel htmlFor={field.name }>{label}</FormLabel>
             <Popover
                 isOpen={isOpen}

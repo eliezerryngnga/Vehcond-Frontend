@@ -7,6 +7,7 @@ import DARoutes from './components/routes/DARoutes';
 import UserProfilePage from './pages/user/profile/UserProfilePage';
 import DADashboardPage from './pages/da/dashboard/DADashboardPage';
 import VehicleRegistrationForm from './forms/users/VehicleRegistrationForm';
+import EditDraftTable from "./pages/tableData/EditDraft";
 
 import './App.css'
 
@@ -24,6 +25,7 @@ const App = () => {
         {/* Dashboard */}
         <Route path="dashboard" element={<DADashboardPage />} />
         <Route path="dataentryvehicle" element={<VehicleRegistrationForm />} />
+        <Route path="listvehicledraft" element={<EditDraftTable />} />
 
         {/* Profile */}
         <Route path="profile" element={<UserProfilePage />} />

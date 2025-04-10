@@ -17,10 +17,10 @@ import {
     useFetchDistrictName,
     useFetchDistrictRto,
     useFetchFinancialYear,
-    useFetchDepartment
+    // useFetchDepartment
 } from "../../hooks/dataEntryQueries";
 
-const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange }) => {
+const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange, departmentName }) => {
     const [selectedDistrict, setSelectedDistrict] = useState(values.districtName);
     const [filteredRto, setFilteredRto] = useState([]);
 
@@ -33,8 +33,8 @@ const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange })
     const financialYears = useFetchFinancialYear();
     const sortedFinancial = financialYears?.data?.data;
 
-    const department = useFetchDepartment();
-    const sortedDepartment = department?.data?.data;
+    // const department = useFetchDepartment();
+    // const sortedDepartment = department?.data?.data;
 
     useEffect(() => {
         if (selectedDistrict && sortedDistrictRto) {
@@ -57,14 +57,14 @@ const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange })
     const handleDistrictChange = (e) => {
         const value = e.target.value;
         setSelectedDistrict(value);
-        setFieldValue('districtName', value);
+        setFieldValue('registeredDistrict', value);
     };
 
     return (
         <Stack spacing={4}>
             {/* District Field */}
             <SelectField
-                name="districtName"
+                name="registeredDistrict"
                 label="District where vehicle was registered"
                 onChange={handleDistrictChange}
                 placeholder="Select District Name"
@@ -101,22 +101,21 @@ const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange })
 
             {/* Financial Year */}
             <SelectField
-                name="financialYear"
+                name="financialYearCode"
                 label="Financial Year"
                 placeholder="Select Financial Year"
             >
                 {sortedFinancial?.map((financialYear) => (
-                    <option key={financialYear.financialYearCode} value={financialYear.financialYearCode}>
+                    <option key={financialYear.financialyearcode} value={financialYear.financialyearcode}>
                         {financialYear.financialYearFrom} - {financialYear.financialYearTo}
                     </option>
                 ))}
             </SelectField>
 
             {/* Department Name */}
-            <SelectField
-                name="departmentName"
+            {/* <SelectField
+                name="departmentCode"
                 label="Name of Departments to which vehicle belongs to"
-                isDisabled
                 bg="gray.300"
             >
                 {sortedDepartment?.map((departmentName) => (
@@ -124,7 +123,22 @@ const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange })
                         {departmentName.departmentName}
                     </option>
                 ))}
-            </SelectField>
+            </SelectField> */}
+
+<InputField
+                name="departmentNameDisplay" // Different name for display
+                label="Department to which vehicle belongs to"
+                value={departmentName}
+                isReadOnly // Use isReadOnly to prevent user interaction
+                bg="gray.300"
+            />
+            {/* Hidden field to store the actual departmentCode for submission */}
+            <InputField
+                name="departmentCode"
+                type="hidden"
+                value={values.departmentCode}
+                isRequired={false}
+            />
 
             {/* Office Name */}
             <InputField
@@ -148,6 +162,7 @@ const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange })
             <TextAreaField
                 name="address1"
                 label="Address 1"
+                isRequired={false}
             />
 
             {/* Address 2 */}
@@ -161,12 +176,14 @@ const OfficeRecords = ({ values, errors, touched, setFieldValue, handleChange })
             <InputField
                 name="directorateLetterNo"
                 label="Directorate letter no"
+                isRequired={false}
             />
 
             {/* Directorate Letter Date */}
             <DatePickerField
                 name="directorateLetterDate"
                 label="Directorate letter Date"
+                isRequired={false}
             />
 
             {/* Government Forwarding Letter Number */}

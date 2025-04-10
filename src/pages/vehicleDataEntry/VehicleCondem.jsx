@@ -15,41 +15,51 @@ import PartsCondition from './PartsCondition'; // Adjust the import path
 
 const VehicleCondem = ({ values, handleMviReportChange }) => {
     return (
+        
+        
         <Stack spacing={4}>
+
+            {/* Total Km Logged */}
             <InputField
-                name="totalKmLogged"
+                name="totalkms"
                 label="Total Kilometers logged"
             />
 
+
+            {/* Depreciated Value  */}
             <InputField
-                name="dpreciatedValueOfVeh"
+                name="depreciatedamount"
                 label="Depreciated value of the vehicle"
             />
 
             <TextAreaField
-                name="improvFilmentmade"
+                name="improvements"
                 label="Improvement or additional fitments made, if any, and cost thereof"
                 isRequired={false}
             />
 
             <InputField
-                name="totalExpendOfPol"
+                name="expenses"
                 label="Total expenditure incurred in respect of P.O.L, if borne by the Government"
+                isRequired={false}
             />
 
             <InputField
-                name="totalExpendMaintenance"
+                name="repairexpenses"
                 label="Total expenditure incurred on maintenance till now"
+                isRequired={false}
             />
 
             <InputField
-                name="repairsBeforeCondem"
+                name="repairslastsixmonths"
                 label="Repairs(costing over Rs. 1,000) undertaken during the last 6(six) months before the proposal for condemnation or before the vehicle was shut down"
+                isRequired={false}
             />
 
             <RadioGroupField
-                name="vehicleHasAccident"
+                name="whetheraccident"
                 label="Whether the vehicle has met with an accident"
+                isRequired={false}
             >
                 <HStack>
                     <Radio value="yes">Yes</Radio>
@@ -57,23 +67,23 @@ const VehicleCondem = ({ values, handleMviReportChange }) => {
                 </HStack>
             </RadioGroupField>
 
-            {values.vehicleHasAccident === 'yes' && (
-                <RadioGroupField
-                    name="caseInAccident"
-                    label="If yes, whether the case in connection with the accident has been settled"
-                >
-                    <Radio value="yes">Yes</Radio>
-                    <Radio value="no">No</Radio>
-                </RadioGroupField>
-            )}
+            <RadioGroupField
+                name="accidentcaseresolved"
+                label="If yes, whether the case in connection with the accident has been settled"
+                isRequired={false}
+            >
+                <Radio value="yes">Yes</Radio>
+                <Radio value="no">No</Radio>
+            </RadioGroupField>
 
             <TextAreaField
-                name="commentsOfDeptOfficer"
+                name="comments"
                 label="Views/Comments of the Departmental officer"
+                isRequired={false}
             />
 
             <RadioGroupField
-                name="MviReport"
+                name="mvireportavailable"
                 label="Is MVI Report Available? (Y/N)"
                 onChange={(event) => handleMviReportChange(event.target.value)} // Ensure the event value is passed
             >
@@ -83,33 +93,37 @@ const VehicleCondem = ({ values, handleMviReportChange }) => {
                 </HStack>
             </RadioGroupField>
 
-            {values.MviReport === 'yes' && (
+            {values.mvireportavailable === 'yes' && (
                 <>
                     <PartsCondition />
 
                     <InputField
                         name="battery"
                         label="Battery Condition"
+                        isRequired={false}
                     />
                     <InputField
                         name="tyres"
                         label="Tyres Condition"
+                        isRequired={false}
                     />
 
                     <TextAreaField
-                        name="accidentDamage"
+                        name="accidentdamage"
                         label="Accident damage of vehicle (from history sheet)"
                         isRequired={false}
                     />
 
                     <InputField
-                        name="mviPrice"
+                        name="mviprice"
                         label="MVI's assessment of current value"
+                        isRequired={false}
                     />
 
                     <TextAreaField
-                        name="mviRemarks"
+                        name="mviremarks"
                         label="Views/Comments of the MVI officer"
+                        isRequired={false}
                     />
                 </>
             )}

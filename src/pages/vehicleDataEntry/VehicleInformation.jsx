@@ -18,12 +18,13 @@ const VehicleInformation = () => {
 
     return (
         <Stack>
+
+            {/* Vehicle Category */}
             <SelectField
-                name="vehicleCategory"
+                name="vehicletypecode"
                 label="Vehicle Category"
                 placeholder="Select Vehicle Type"
             >
-                {/* <option value="">Select Vehicle Type</option> */}
                 {sortedVehicleType?.map((vehicleCategory) => (
                     <option key={vehicleCategory.vehicleTypeCode} value={vehicleCategory.vehicleTypeCode}>
                         {vehicleCategory.vehicletypedescription}
@@ -31,13 +32,16 @@ const VehicleInformation = () => {
                 ))}
             </SelectField>
 
+            {/* Vehicle Description */}
             <TextAreaField 
-                name="descriptionOfVehicle" 
+                name="vehicledescription" 
                 label="Description of Vehicle" 
             />
 
+
+            {/* Vehicle Manufacturer */}
             <SelectField
-                name="vehicleManufacturer"
+                name="vehiclemanufacturercode"
                 label="Vehicle Manufacturer"
 
                 placeholder="Vehicle Manufacturer Name"
@@ -50,29 +54,35 @@ const VehicleInformation = () => {
                 ))}
             </SelectField>
 
+            {/* Engine Number */}
             <InputField 
-                name="engineNumber" 
+                name="engineno" 
                 label="Engine Number" 
                 placeholder="Max 10 characters Eg. GFTY123V56" 
              />
+
+             {/* Chassis Number */}
             <InputField 
-                name="chassisNumber" 
+                name="chassisno" 
                 label="Chassis Number" 
                 placeholder="Max 17 characters Eg. A1B2C3" 
             />
 
+            {/* Year of Manufacturer */}
             <InputField 
-                name="yearOfManufacturer" 
+                name="manufactureyear" 
                 label="Year of manufacturer" 
             />
 
+            {/* Date of purchase */}
             <DatePickerField
-                name="dateOfPurchase" 
+                name="purchasedate" 
                 label="Date of purchase" 
             />
 
+            {/* Vehicle Price */}
             <InputField 
-                name="vehiclePurchasePrice" 
+                name="vehicleprice" 
                 label="Vehicle purchase price" 
             />
         </Stack>

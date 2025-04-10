@@ -49,7 +49,8 @@ const PartsCondition = () => {
                 <TextAreaField
                     key={part.vehiclePartCode}
                     label={part.vehiclePartDescription}
-                    name={`partsCondition.${part.vehiclePartCode}`} // Unique name for each field
+                    name={`partsCondition.${part.vehiclePartCode}`}
+                    isRequired={false}
                 />
             ))}
         </VStack>

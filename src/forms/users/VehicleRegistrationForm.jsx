@@ -27,33 +27,35 @@ import OfficeRecords from "../../pages/vehicleDataEntry/OfficeRecords";
 import VehicleInformation from "../../pages/vehicleDataEntry/VehicleInformation";
 import VehicleCondem from "../../pages/vehicleDataEntry/VehicleCondem";
 
+import { useSendToDraft, useFetchDepartment } from "../../hooks/dataEntryQueries";
+
 const validationSchemaStep_1 = yup.object({
   // Step 1
-  districtName: yup
+  registeredDistrict: yup
     .string()
     .required("District Name cannot be blank"),
 
-  rtoNo: yup
+    rtoNo: yup
     .string()
     .required("RTO No. cannot be blank"),
 
-  vehicleRegistrationNumber: yup
+    vehicleRegistrationNumber: yup
     .string()
     .matches(/^[A-Z]{2,}\s*\d{1,4}$/, "Invalid format (e.g., AA 1234 or B 1234)")
     .required("Cannot be blank"),
 
-  financialYear: yup
-    .number()
+    financialYearCode: yup
+    .string() 
     .required("Financial Year cannot be blank"),
 
-  departmentName: yup
+    departmentCode: yup
     .string(),
 
-  officeName: yup
+    officeName: yup
     .string()
     .required("Office Name cannot be blank"),
 
-  officerDesignation: yup
+    officerDesignation: yup
     .string()
     .required("Office Designation cannot be blank"),
 
@@ -62,48 +64,50 @@ const validationSchemaStep_1 = yup.object({
     .required("Premises cannot be blank"),
 
   address1: yup
-    .string()
-    .required("Address Line 1 cannot be blank"),
+    .string(),
 
   address2: yup
     .string(),
 
-  directorateLetterNo: yup
-    .string()
-    .required("Directorate Letter No. cannot be blank"),
+    directorateLetterNo: yup
+    .string(),
 
-  directorateLetterDate: yup
+    directorateLetterDate: yup
     .date()
-    .required("Directorate Letter Date cannot be blank")
-    .typeError("Invalid date"),
+    .nullable(true),
 
-  forwardingLetterNo: yup
+    forwardingLetterNo: yup
     .string()
     .required("Govt. Forwarding Letter No. cannot be blank"),
 
-  govForwardingLetterDate: yup
+    govForwardingLetterDate: yup
     .date()
     .required("Govt. Forwarding Letter Date cannot be blank")
     .typeError("Invalid date"),
 });
 
 const validationSchemaStep_2 = yup.object({
-  vehicleCategory: yup
+  vehicletypecode: yup
     .string()
     .required("Vehicle Category cannot be blank"),
-  descriptionOfVehicle: yup
+
+    vehicledescription: yup
     .string()
     .required("Description cannot be blank"),
-  vehicleManufacturer: yup
+
+    vehiclemanufacturercode: yup
     .string()
     .required("Manufacturer cannot be blank"),
-  engineNumber: yup
+
+    engineno: yup
     .string()
     .required("Engine No. cannot be blank"),
-  chassisNumber: yup
+
+    chassisno: yup
     .string()
     .required("Chassis No. cannot be blank"),
-  yearOfManufacturer: yup
+
+    manufactureyear: yup
     .number()
     .required("Year of Manufacture cannot be blank")
     .typeError("Must be a number")
@@ -111,11 +115,12 @@ const validationSchemaStep_2 = yup.object({
     .min(1900, "Year seems too old")
     .max(new Date().getFullYear() + 1, "Year cannot be in the future"), // Allow current year + 1 for upcoming models
 
-  dateOfPurchase: yup
+    purchasedate: yup
     .date()
     .required("Date of Purchase cannot be blank")
     .typeError("Invalid date"),
-  vehiclePurchasePrice: yup
+
+    vehicleprice: yup
     .number()
     .required("Purchase Price cannot be blank")
     .typeError("Must be a number")
@@ -124,55 +129,49 @@ const validationSchemaStep_2 = yup.object({
 
 const validationSchemaStep_3 = yup.object({
 
-  totalKmLogged: yup
+  totalkms: yup
     .number()
     .required("Total Km cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
 
-  dpreciatedValueOfVeh: yup
+    depreciatedamount: yup
     .number()
     .required("Depreciated Value cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
 
-  improvFilmentmade: yup
+    improvements: yup
     .string(),
 
-  totalExpendOfPol: yup
+    expenses: yup
     .number()
     .required("Total POL Expenditure cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
 
-  totalExpendMaintenance: yup
+    repairexpenses: yup
     .number()
     .required("Total Maintenance Expenditure cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
 
-  repairsBeforeCondem: yup
+    repairslastsixmonths: yup
     .string()
     .required("Repairs Before Condemnation cannot be blank"),
 
-  vehicleHasAccident: yup
+  whetheraccident: yup
     .string()
     .required("Specify if vehicle had an accident"),
 
-  // Conditional validation: caseInAccident required only if vehicleHasAccident is 'Yes'
-  caseInAccident: yup
-    .string()
-    .when("vehicleHasAccident", {
-      is: (val) => val && val.toLowerCase() === 'yes', // Adjust condition based on actual value ('Yes', true, etc.)
-      then: (schema) => schema.required("Case details required if accident occurred"),
-      otherwise: (schema) => schema.optional(),
-    }),
+  accidentcaseresolved: yup
+    .string(),
 
-  commentsOfDeptOfficer: yup
+  comments: yup
     .string()
     .required("Department Officer Comments cannot be blank"),
 
-  MviReport: yup
+  mvireportavailable: yup
     .string()
     .required("MVI Report upload cannot be blank"),
 });
@@ -193,6 +192,11 @@ const yupErrorsToFormik = (yupError) => {
 const VehicleRegistrationForm = () => {
   const [step, setStep] = useState(0);
   const toast = useToast();
+  const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
+  const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
+  const { mutate: sendToDraftMutate, isLoading: isDraftSending } = useSendToDraft();
+
+  const { data: departmentData, isSuccess: isDepartmentSuccess } = useFetchDepartment();
 
   const baseSteps = [
     { title: "Step 1", description: "Office Details", schema: validationSchemaStep_1 },
@@ -203,7 +207,8 @@ const VehicleRegistrationForm = () => {
   const renderContent = (currentStep, formikProps) => {
     switch (currentStep) {
       case 0:
-        return <OfficeRecords {...formikProps} />;
+        return <OfficeRecords {...formikProps}
+        departmentName={departmentData?.data?.[0]?.departmentName || ''} />;
       case 1:
         return <VehicleInformation {...formikProps} />;
       case 2:
@@ -215,46 +220,47 @@ const VehicleRegistrationForm = () => {
 
   const baseInitialValues = {
     // Step 1
-    districtName: "",
+    registeredDistrict: "", 
     rtoNo: "",
     vehicleRegistrationNumber: "",
-    financialYear: "",
-    departmentName: "",
+    financialYearCode: "", 
+    departmentCode: "", 
     officeName: "",
     officerDesignation: "",
     premises: "",
     address1: "",
     address2: "",
     directorateLetterNo: "",
-    directorateLetterDate: '',
+    directorateLetterDate: null,
     forwardingLetterNo: '',
-    govForwardingLetterDate: '',
+    govForwardingLetterDate: null,
     // Step 2
-    vehicleCategory: "",
-    descriptionOfVehicle: "",
-    vehicleManufacturer: "",
-    engineNumber: "",
-    chassisNumber: "",
-    yearOfManufacturer: '',
-    dateOfPurchase: '',
-    vehiclePurchasePrice: '',
-    totalKmLogged: "",
+    vehicletypecode: "",
+    vehicledescription: "",
+    vehiclemanufacturercode: "",
+    engineno: "",
+    chassisno: "",
+    manufactureyear: '',
+    purchasedate: '',
+    vehicleprice: '',
     // Step 3
-    dpreciatedValueOfVeh: "",
-    improvFilmentmade: "",
-    totalExpendOfPol: "",
-    totalExpendMaintenance: "",
-    repairsBeforeCondem: "",
-    vehicleHasAccident: "",
-    caseInAccident: "",
-    commentsOfDeptOfficer: "",
-    MviReport: "",
+    totalkms: "",
+    depreciatedamount: "",
+    improvements: "",
+    expenses: "",
+    repairexpenses: "",
+    repairslastsixmonths: "",
+    whetheraccident: "",
+    accidentcaseresolved: "",
+    comments: "",
+    mvireportavailable: "",
     partsCondition: {}, // Initialize for PartsCondition
     battery: "",
     tyres: "",
-    accidentDamage: "",
-    mviPrice: "",
-    mviRemarks: "",
+    accidentdamage: "",
+    mviprice: "",
+    mviremarks: "",
+    remarks: "", // Added for the backend 'remarks' field
   };
 
   const handleNext = async (values, setErrors, setTouched) => {
@@ -302,18 +308,141 @@ const VehicleRegistrationForm = () => {
   };
 
   const handleSaveDraft = (values) => {
-    console.log("Form saved as Draft:", values);
-  }
+
+    const {
+      address1,
+      address2,
+      directorateLetterNo,
+      directorateLetterDate,
+      forwardingLetterNo,
+      govForwardingLetterDate,
+      rtoNo, 
+      vehicleRegistrationNumber,
+      partsCondition,
+      ...restValues
+    } = values;
+  
+    // const locations = `${address1 || ''}|${address2 || ''}`;
+  
+    // const formattedDirectorateDate = directorateLetterDate ? new Date(directorateLetterDate).toISOString().slice(0,10) : '';
+  
+    // const directorateLetterNodate = `${directorateLetterNo || ''}|${formattedDirectorateDate}`;
+  
+    // const formattedGovtDate = govForwardingLetterDate ? new Date(govForwardingLetterDate).toISOString().slice(0, 10) : '';
+  
+    // const govtLetterNoDate = `${forwardingLetterNo || ''}|${formattedGovtDate}`;
+  
+    // // Combine rtoNo and vehicleRegistrationNumber for registrationNo
+    // const registrationNo = `${rtoNo || ''}${vehicleRegistrationNumber ? vehicleRegistrationNumber.toUpperCase() : ''}`;
+  
+    const vehiclePartsConditionDraft = Object.keys(partsCondition || {}).map(partCodeStr => ({
+      vehiclepartcode: parseInt(partCodeStr, 10),
+      condition: partsCondition[partCodeStr],
+    }));
+
+    const updatedValues = {
+      
+      // locations: locations,
+      // directorateLetterNodate: directorateLetterNodate,
+      // govtLetterNoDate: govtLetterNoDate,
+      // registrationNo: registrationNo,
+      address1: address1,
+      address2: address2,
+      directorateLetterNo: directorateLetterNo,
+      directorateLetterDate: directorateLetterDate,
+      forwardingLetterNo: forwardingLetterNo,
+      govForwardingLetterDate: govForwardingLetterDate,
+      rtoNo: rtoNo,
+      vehicleRegistrationNumber: vehicleRegistrationNumber,
+      vehiclePartsDraft: vehiclePartsConditionDraft,
+      ...restValues,
+    };
+    
+    console.log("Updated Values Object:",updatedValues);
+
+    console.log("JSON Payload:", JSON.stringify(updatedValues, null, 2));
+  
+    // console.log(values);
+  
+    setIsSubmittingDraft(true);
+    sendToDraftMutate(updatedValues, {
+      onSuccess: (data) => {
+        setIsSubmittingDraft(false);
+        toast({
+          title: "Draft Saved.",
+          description: `Draft saved with Application Code: ${data?.applicationCode || 'N/A'}`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      },
+      onError: (error) => {
+        setIsSubmittingDraft(false);
+        console.error("Error saving draft:", error);
+        toast({
+          title: "Failed to Save Draft.",
+          description: error?.message || "Something went wrong while saving the draft.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      },
+    });
+  };
 
   const handleFinalSubmit = (values) => {
+    // setIsSubmittingFinal(true);
     console.log("Final submit:", values);
-  }
+    // Implement your API call for final submission here using fetch or another hook
+    // fetch('/draft/final-submit', { // Replace with your actual final submit endpoint
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(values),
+    // })
+    // .then(response => {
+    //   if (!response.ok) {
+    //     throw new Error(`HTTP error! status: ${response.status}`);
+    //   }
+    //   return response.text(); // Or response.json()
+    // })
+    // .then(data => {
+    //   setIsSubmittingFinal(false);
+    //   toast({
+    //     title: "Final Submission Successful.",
+    //     description: data || "Vehicle data submitted successfully.",
+    //     status: "success",
+    //     duration: 3000,
+    //     isClosable: true,
+    //   });
+    //   // Optionally redirect or reset the form
+    // })
+    // .catch((error) => {
+    //   setIsSubmittingFinal(false);
+    //   console.error("Error submitting data:", error);
+    //   toast({
+    //     title: "Final Submission Failed.",
+    //     description: error.message || "Something went wrong during final submission.",
+    //     status: "error",
+    //     duration: 5000,
+    //     isClosable: true,
+    //   });
+    // });
+  };
 
   const [currentInitialValues, setCurrentInitialValues] = useState(baseInitialValues);
 
   useEffect(() => {
-    setCurrentInitialValues(baseInitialValues); // Initialize with base values on component mount
-  }, []);
+    if (isDepartmentSuccess && departmentData?.data?.[0]?.departmentCode) {
+        setCurrentInitialValues(prevValues => ({
+            ...prevValues,
+            departmentCode: departmentData.data[0].departmentCode,
+        }));
+    } else {
+        setCurrentInitialValues(baseInitialValues);
+    }
+}, [isDepartmentSuccess, departmentData]);
 
   return (
     <Box bg="paper" shadow="md" w="auto" p={6} m={4} borderRadius="md">
@@ -361,17 +490,23 @@ const VehicleRegistrationForm = () => {
                     </Button>
                   ) : (
                     <>
-                      <Button
+                                            <Button
                         mr={2}
                         onClick={() => handleSaveDraft(formikProps.values)}
                         colorScheme="blue"
                         variant="outline"
+                        isLoading={isSubmittingDraft || isDraftSending}
+                        loadingText="Saving Draft..."
+                        isDisabled={isSubmittingDraft || isDraftSending}
                       >
                         Save As Draft
                       </Button>
                       <Button
                         onClick={() => handleFinalSubmit(formikProps.values)}
                         colorScheme="green"
+                        isLoading={isSubmittingFinal}
+                        loadingText="Submitting..."
+                        isDisabled={isSubmittingFinal}
                       >
                         Final Submit
                       </Button>

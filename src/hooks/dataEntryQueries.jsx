@@ -120,3 +120,24 @@ export const useFetchVehicleParts = () =>
     })
 }
 
+//POST
+const draft = (data) => {
+    return request ({
+        url: `/draft`,
+        method: "post",
+        data: data,
+    })
+}
+
+export const useSendToDraft = () => {
+    return useMutation ({
+        mutationFn: draft,
+        onSuccess: (data, variables, context) => {
+            console.log("Data sent to draft successfully: ", data);
+        },
+        onError: (error, variables, context) => {
+            console.log("Error sending data to draft: ", error);
+        },
+    });
+};
+
