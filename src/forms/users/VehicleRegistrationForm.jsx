@@ -1,7 +1,5 @@
-import {
-  useEffect,
-  useState
-} from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   Stepper,
@@ -18,109 +16,102 @@ import {
   Stack,
   Flex,
   useToast,
+  Spinner,
+  Text
 } from "@chakra-ui/react";
 
 import { Formik, Form } from "formik";
 import * as yup from "yup";
+import dayjs from 'dayjs';
 
 import OfficeRecords from "../../pages/vehicleDataEntry/OfficeRecords";
 import VehicleInformation from "../../pages/vehicleDataEntry/VehicleInformation";
 import VehicleCondem from "../../pages/vehicleDataEntry/VehicleCondem";
 
-import { useSendToDraft, useFetchDepartment } from "../../hooks/dataEntryQueries";
+import {
+  useSendToDraft,
+  useFetchDepartment,
+  useSendToFinal,
+  useFetchDraftByCode,
+} from "../../hooks/dataEntryQueries";
+
+const maxToday = dayjs().endOf('day').toDate();
 
 const validationSchemaStep_1 = yup.object({
-  // Step 1
   registeredDistrict: yup
     .string()
     .required("District Name cannot be blank"),
-
-    rtoNo: yup
+  rtoCode: yup
     .string()
     .required("RTO No. cannot be blank"),
-
-    vehicleRegistrationNumber: yup
+  vehicleRegistrationNumber: yup
     .string()
-    .matches(/^[A-Z]{2,}\s*\d{1,4}$/, "Invalid format (e.g., AA 1234 or B 1234)")
+    .matches(/^[A-Z]{0,2}\s*\d{1,4}$/,"Invalid format (e.g., AA 1234 or B 1234)")
     .required("Cannot be blank"),
-
-    financialYearCode: yup
-    .string() 
+  financialYearCode: yup
+    .string()
     .required("Financial Year cannot be blank"),
-
-    departmentCode: yup
+  departmentCode: yup
     .string(),
-
-    officeName: yup
+  officeName: yup
     .string()
     .required("Office Name cannot be blank"),
-
-    officerDesignation: yup
+  officerDesignation: yup
     .string()
     .required("Office Designation cannot be blank"),
-
   premises: yup
     .string()
     .required("Premises cannot be blank"),
-
   address1: yup
     .string(),
-
   address2: yup
     .string(),
-
-    directorateLetterNo: yup
+  directorateLetterNo: yup
     .string(),
-
-    directorateLetterDate: yup
+  directorateLetterDate: yup
     .date()
-    .nullable(true),
-
-    forwardingLetterNo: yup
+    .nullable(true)
+    .max(maxToday, "Directorate Letter Date cannot be in the future")
+    .typeError("Invalid date for Directorate Letter"),
+  forwardingLetterNo: yup
     .string()
     .required("Govt. Forwarding Letter No. cannot be blank"),
-
-    govForwardingLetterDate: yup
+  govForwardingLetterDate: yup
     .date()
     .required("Govt. Forwarding Letter Date cannot be blank")
-    .typeError("Invalid date"),
+    .max(maxToday, "Forwarding Letter Date cannot be in the future")
+    .typeError("Invalid date format for Govt. Forwarding Letter Date"),
 });
 
 const validationSchemaStep_2 = yup.object({
   vehicletypecode: yup
     .string()
     .required("Vehicle Category cannot be blank"),
-
-    vehicledescription: yup
+  vehicledescription: yup
     .string()
     .required("Description cannot be blank"),
-
-    vehiclemanufacturercode: yup
+  vehiclemanufacturercode: yup
     .string()
     .required("Manufacturer cannot be blank"),
-
-    engineno: yup
+  engineno: yup
     .string()
     .required("Engine No. cannot be blank"),
-
-    chassisno: yup
+  chassisno: yup
     .string()
     .required("Chassis No. cannot be blank"),
-
-    manufactureyear: yup
+  manufactureyear: yup
     .number()
     .required("Year of Manufacture cannot be blank")
     .typeError("Must be a number")
     .integer("Must be a whole number")
     .min(1900, "Year seems too old")
-    .max(new Date().getFullYear() + 1, "Year cannot be in the future"), // Allow current year + 1 for upcoming models
-
-    purchasedate: yup
+    .max(new Date().getFullYear() + 1, "Year cannot be in the future"),
+  purchasedate: yup
     .date()
     .required("Date of Purchase cannot be blank")
-    .typeError("Invalid date"),
-
-    vehicleprice: yup
+    .max(maxToday, "Purchase date cannot be in the future")
+    .typeError("Invalid date format for Date of Purchase"),
+  vehicleprice: yup
     .number()
     .required("Purchase Price cannot be blank")
     .typeError("Must be a number")
@@ -128,52 +119,98 @@ const validationSchemaStep_2 = yup.object({
 });
 
 const validationSchemaStep_3 = yup.object({
-
   totalkms: yup
     .number()
     .required("Total Km cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
-
-    depreciatedamount: yup
+  depreciatedamount: yup
     .number()
     .required("Depreciated Value cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
-
-    improvements: yup
+  improvements: yup
     .string(),
-
-    expenses: yup
+  expenses: yup
     .number()
     .required("Total POL Expenditure cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
-
-    repairexpenses: yup
+  repairexpenses: yup
     .number()
     .required("Total Maintenance Expenditure cannot be blank")
     .typeError("Must be a number")
     .min(0, "Cannot be negative"),
-
-    repairslastsixmonths: yup
-    .string()
-    .required("Repairs Before Condemnation cannot be blank"),
-
+  repairslastsixmonths: yup
+    .number()
+    .required("Repairs Before Condemnation cannot be blank")
+    .typeError("Repairs Before Condemnation must be a number")
+    .min(0, "Value cannot be negative"),
   whetheraccident: yup
     .string()
     .required("Specify if vehicle had an accident"),
-
   accidentcaseresolved: yup
-    .string(),
-
+    .string().when("whetheraccident", {
+    is: "Y",
+    then: (schema) => schema
+    .required("Specify if accident case has been resolved"),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
   comments: yup
     .string()
     .required("Department Officer Comments cannot be blank"),
-
   mvireportavailable: yup
     .string()
-    .required("MVI Report upload cannot be blank"),
+    .required("MVI Report availability cannot be blank"),
+  partsCondition: yup.object().when("mvireportavailable", {
+    is: "Y",
+    then: (schema) => schema.test(
+        'parts-condition-check',
+        'Condition for each listed part must be specified when MVI report is available.',
+        (value) => {
+            if (!value || typeof value !== 'object' || Object.keys(value).length === 0) return true;
+            return Object.values(value).every(condition => typeof condition === 'string' && condition.trim() !== '');
+        }
+    ).default({}),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
+  battery: yup
+    .string().when("mvireportavailable", {
+    is: "Y",
+    then: (schema) => schema
+    .required("Battery Condition cannot be blank"),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
+  tyres: yup
+    .string().when("mvireportavailable", {
+    is: "Y",
+    then: (schema) => schema
+    .required("Tyres Condition cannot be blank"),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
+  accidentdamage: yup
+    .string().when("mvireportavailable", {
+    is: "Y",
+    then: (schema) => schema
+    .required("Accident damage description cannot be blank"),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
+  mviprice: yup.number().when("mvireportavailable", {
+    is: "Y",
+    then: (schema) =>
+      schema
+    .required("MVI's assessment of current value cannot be blank")
+        .typeError("MVI's assessment must be a number")
+        .min(0, "MVI's assessment cannot be negative"),
+    otherwise: (schema) => schema.optional().nullable().transform(() => 0),
+  }),
+  mviremarks: yup
+    .string().when("mvireportavailable", {
+    is: "Y",
+    then: (schema) => schema
+    .required("MVI officer comments cannot be blank"),
+    otherwise: (schema) => schema.optional().nullable(),
+  }),
 });
 
 const yupErrorsToFormik = (yupError) => {
@@ -188,15 +225,25 @@ const yupErrorsToFormik = (yupError) => {
   return errors;
 };
 
-
 const VehicleRegistrationForm = () => {
-  const [step, setStep] = useState(0);
-  const toast = useToast();
-  const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
-  const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
-  const { mutate: sendToDraftMutate, isLoading: isDraftSending } = useSendToDraft();
+  
+  const { draftId } = useParams();
 
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const toastShownRef = useRef(false);
+
+  const [step, setStep] = useState(0);
+
+  const [applicationCode, setApplicationCode] = useState(null);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(!!draftId);
+
+  const { mutateAsync: sendToDraftMutateAsync, isLoading: isDraftSending } = useSendToDraft();
+  const { mutate: sendToFinalMutate, isLoading: isFinalSending } = useSendToFinal();
   const { data: departmentData, isSuccess: isDepartmentSuccess } = useFetchDepartment();
+
+  const { data: draftData, isSuccess: isDraftLoaded, isError: isDraftError } = useFetchDraftByCode(draftId);
 
   const baseSteps = [
     { title: "Step 1", description: "Office Details", schema: validationSchemaStep_1 },
@@ -204,63 +251,183 @@ const VehicleRegistrationForm = () => {
     { title: "Step 3", description: "Vehicle Condemnation", schema: validationSchemaStep_3 },
   ];
 
-  const renderContent = (currentStep, formikProps) => {
-    switch (currentStep) {
-      case 0:
-        return <OfficeRecords {...formikProps}
-        departmentName={departmentData?.data?.[0]?.departmentName || ''} />;
-      case 1:
-        return <VehicleInformation {...formikProps} />;
-      case 2:
-        return <VehicleCondem {...formikProps} />;
-      default:
-        return null;
+  const baseInitialValues = {
+    //STEP 1
+    registeredDistrict: "", 
+    rtoCode: "", 
+    vehicleRegistrationNumber: "", 
+    financialYearCode: "",
+    departmentCode: "", 
+    officeName: "", 
+    officerDesignation: "", 
+    premises: "",
+    address1: "", 
+    address2: "", 
+    directorateLetterNo: "", 
+    directorateLetterDate: null,
+    forwardingLetterNo: "", 
+    govForwardingLetterDate: null, 
+    //STEP 2
+    vehicletypecode: "",
+    vehicledescription: "", 
+    vehiclemanufacturercode: "", 
+    engineno: "", 
+    chassisno: "",
+    manufactureyear: "", 
+    purchasedate: null, 
+    vehicleprice: "", 
+    //STEP 3 
+    totalkms: "",
+    depreciatedamount: "", 
+    improvements: "", 
+    expenses: "", 
+    repairexpenses: "",
+    repairslastsixmonths: "", 
+    whetheraccident: "", 
+    accidentcaseresolved: "",
+    comments: "", 
+    mvireportavailable: "", 
+    partsCondition: {}, 
+    battery: "",
+    tyres: "", 
+    accidentdamage: "", 
+    mviprice: "", 
+    mviremarks: "", 
+    remarks: "",
+  };
+
+  const [currentInitialValues, setCurrentInitialValues] = useState(baseInitialValues);
+
+  useEffect(() => {
+    if (isDraftLoaded && draftData?.data && !toastShownRef.current) {
+
+      toastShownRef.current = true;
+
+      const fetched = draftData.data;
+      
+      const transformedValues = {
+        ...baseInitialValues,
+        ...fetched,
+        // --- Transform data to match what the form expects ---
+        directorateLetterDate: fetched.directorateLetterDate ? new Date(fetched.directorateLetterDate) : null,
+        govForwardingLetterDate: fetched.govForwardingLetterDate ? new Date(fetched.govForwardingLetterDate) : null,
+        purchasedate: fetched.purchasedate ? new Date(fetched.purchasedate) : null,
+        
+      officeName: fetched.officeName || "",
+      officerDesignation: fetched.officerDesignation || "",
+      premises: fetched.premises || "",
+      address1: fetched.address1 || "",
+      address2: fetched.address2 || "",
+      directorateLetterNo: fetched.directorateLetterNo || "",
+      forwardingLetterNo: fetched.forwardingLetterNo || "",
+      rtoCode: fetched.rtoCode || "",
+      vehicleRegistrationNumber: fetched.vehicleRegistrationNumber || "",
+      vehicledescription: fetched.vehicledescription || "",
+      engineno: fetched.engineno || "",
+      chassisno: fetched.chassisno || "",
+      improvements: fetched.improvements || "",
+      comments: fetched.comments || "",
+      battery: fetched.battery || "",
+      tyres: fetched.tyres || "",
+      accidentdamage: fetched.accidentdamage || "",
+      mviremarks: fetched.mviremarks || "",
+      remarks: fetched.remarks || "",
+
+      // --- Number Fields (coalesce null to "" because input type="number" wants a string) ---
+      manufactureyear: fetched.manufactureyear || "",
+      vehicleprice: fetched.vehicleprice || "",
+      totalkms: fetched.totalkms || "",
+      depreciatedamount: fetched.depreciatedamount || "",
+      expenses: fetched.expenses || "",
+      repairexpenses: fetched.repairexpenses || "",
+      repairslastsixmonths: fetched.repairslastsixmonths || "",
+      mviprice: fetched.mviprice || "",
+
+      // --- Select Fields (coalesce null to "" to match the placeholder value) ---
+      financialYearCode: String(fetched.financialYearCode || ""),
+      departmentCode: String(fetched.departmentCode || ""),
+      registeredDistrict: String(fetched.registeredDistrict || ""),
+      vehicletypecode: String(fetched.vehicletypecode || ""),
+      vehiclemanufacturercode: String(fetched.vehiclemanufacturercode || ""),
+      whetheraccident: fetched.whetheraccident || "",
+      accidentcaseresolved: fetched.accidentcaseresolved || "",
+      mvireportavailable: fetched.mvireportavailable || "",
+
+
+        partsCondition: (fetched.vehiclePartsDraft || []).reduce((acc, part) => {
+          acc[part.vehiclepartcode] = part.condition;
+          return acc;
+        }, {}),
+      };
+
+      setCurrentInitialValues(transformedValues);
+      setApplicationCode(fetched.applicationCode);
+      setIsLoadingDraft(false);
+
+      toast({
+        title: "Draft Loaded",
+        description: `Resuming application ${fetched.applicationCode}.`,
+        status: "info",
+        duration: 3000,
+        isClosable: true,
+      });
+    } else if (isDraftError) {
+      setIsLoadingDraft(false); 
+      toast({
+        title: "Error Loading Draft",
+        description: "Could not find the requested draft. You have been redirected.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      navigate("/da/listvehicledraft"); // Redirect away
+    }
+  }, [isDraftLoaded, draftData, isDraftError, navigate, toast]);
+
+  // Effect: Set department code for new forms
+  useEffect(() => {
+    if (!draftId && isDepartmentSuccess && departmentData?.data?.[0]?.departmentCode) {
+      const fetchedDeptCode = String(departmentData.data[0].departmentCode);
+      setCurrentInitialValues((prevValues) => {
+          if (prevValues.departmentCode === "" || prevValues.departmentCode !== fetchedDeptCode) {
+            return { ...prevValues, departmentCode: fetchedDeptCode };
+          }
+          return prevValues;
+      });
+    }
+  }, [draftId, isDepartmentSuccess, departmentData]);
+
+    // 7. ADD A LOADING SPINNER FOR THE ENTIRE COMPONENT
+  if (isLoadingDraft) {
+    return (
+      <Box bg="white" shadow="md" w="auto" p={{ base: 3, md: 6 }} m={{ base: 2, md: 4 }} borderRadius="md">
+        <Flex justify="center" align="center" height="400px">
+          <Spinner thickness="4px" speed="0.65s" color="teal.500" size="xl" />
+          <Text ml={4} fontSize="lg" color="gray.600">Loading your draft...</Text>
+        </Flex>
+      </Box>
+    );
+  }
+
+  const handleMviReportChangeCallback = (value, setFieldValueFunc) => {
+    setFieldValueFunc('mvireportavailable', value);
+    if (value === 'N') {
+        setFieldValueFunc('partsCondition', {});
+        setFieldValueFunc('battery', '');
+        setFieldValueFunc('tyres', '');
+        setFieldValueFunc('accidentdamage', '');
+        setFieldValueFunc('mviprice', '');
+        setFieldValueFunc('mviremarks', '');
     }
   };
 
-  const baseInitialValues = {
-    // Step 1
-    registeredDistrict: "", 
-    rtoNo: "",
-    vehicleRegistrationNumber: "",
-    financialYearCode: "", 
-    departmentCode: "", 
-    officeName: "",
-    officerDesignation: "",
-    premises: "",
-    address1: "",
-    address2: "",
-    directorateLetterNo: "",
-    directorateLetterDate: null,
-    forwardingLetterNo: '',
-    govForwardingLetterDate: null,
-    // Step 2
-    vehicletypecode: "",
-    vehicledescription: "",
-    vehiclemanufacturercode: "",
-    engineno: "",
-    chassisno: "",
-    manufactureyear: '',
-    purchasedate: '',
-    vehicleprice: '',
-    // Step 3
-    totalkms: "",
-    depreciatedamount: "",
-    improvements: "",
-    expenses: "",
-    repairexpenses: "",
-    repairslastsixmonths: "",
-    whetheraccident: "",
-    accidentcaseresolved: "",
-    comments: "",
-    mvireportavailable: "",
-    partsCondition: {}, // Initialize for PartsCondition
-    battery: "",
-    tyres: "",
-    accidentdamage: "",
-    mviprice: "",
-    mviremarks: "",
-    remarks: "", // Added for the backend 'remarks' field
+  const renderContent = (currentStep, formikProps) => {
+    switch (currentStep) {
+      case 0: return <OfficeRecords {...formikProps} values={formikProps.values} departmentName={departmentData?.data?.[0]?.departmentName || ""} />;
+      case 1: return <VehicleInformation {...formikProps} values={formikProps.values} />;
+      case 2: return <VehicleCondem {...formikProps} values={formikProps.values} handleMviReportChange={(v) => handleMviReportChangeCallback(v, formikProps.setFieldValue)} />;
+      default: return null;
+    }
   };
 
   const handleNext = async (values, setErrors, setTouched) => {
@@ -269,36 +436,52 @@ const VehicleRegistrationForm = () => {
       await currentSchema.validate(values, { abortEarly: false });
       setErrors({});
       const currentStepFields = Object.keys(currentSchema.fields);
-      const touchedUpdates = currentStepFields.reduce((acc, field) => ({ ...acc, [field]: false }), {});
+      const touchedUpdates = currentStepFields.reduce((acc, field) => ({ ...acc, [field]: false }),{});
       setTouched(touchedUpdates, false);
 
-      if (step < baseSteps.length - 1) {
-        setStep(step + 1);
+      const submissionValues = prepareSubmitValues(values);
+
+      const payload = { ...submissionValues, applicationCode: applicationCode};
+
+      toast({
+        title: "Saving step...",
+        status: "info",
+        duration: 1500
+      });
+
+      const result = await sendToDraftMutateAsync(payload);
+
+      const newAppCode = result?.data?.applicationCode;
+
+      if(!applicationCode && newAppCode)
+      {
+        setApplicationCode(newAppCode);
+
+        console.log("Draft created with Application Code: ", newAppCode);
       }
+      toast.closeAll();
+      toast({
+        title:  `Step ${step + 1} Saved`,
+        status: "success",
+        duration: 2000
+      })
+
+      if (step < baseSteps.length - 1)
+      {
+        setStep(step + 1);
+      } 
     } catch (err) {
       if (err instanceof yup.ValidationError) {
         const formikErrors = yupErrorsToFormik(err);
         setErrors(formikErrors);
-        setTouched(
-          Object.keys(formikErrors).reduce((acc, key) => ({ ...acc, [key]: true }), {}),
-          false
-        );
-        toast({
-          title: "Validation Error.",
-          description: "Please check the highlighted fields.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        setTouched(Object.keys(formikErrors).reduce((acc, key) => ({ ...acc, [key]: true }),{}), false);
+        toast({ title: "Validation Error.", description: "Please check the highlighted fields.", status: "error", duration: 3000, isClosable: true });
       } else {
-        console.error("Unexpected error during validation:", err);
-        toast({
-          title: "An Error Occurred.",
-          description: "Something went wrong during validation.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
+        
+        console.error("Error during step save: ", err);
+        const errorMessage = err?.response?.data?.message || "Could not save progress to server.";
+
+        toast({ title: "Save Failed.", description: errorMessage, status: "error", duration: 5000, isClosable: true });
       }
     }
   };
@@ -307,215 +490,225 @@ const VehicleRegistrationForm = () => {
     setStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const handleSaveDraft = (values) => {
+  const safeParseInt = (value, defaultValue = null) => {
+      if (value === null || value === undefined || String(value).trim() === "") return defaultValue;
+      const parsed = parseInt(String(value).trim(), 10);
+      return isNaN(parsed) ? defaultValue : parsed;
+  };
+  
+  const safeParseFloat = (value, defaultValue = null) => {
+    if (value === null || value === undefined || String(value).trim() === "") return defaultValue;
+    const numValue = String(value).replace(/,/g, ''); 
+    const parsed = parseFloat(numValue);
+    return isNaN(parsed) ? defaultValue : parsed;
+  };
 
-    const {
-      address1,
-      address2,
-      directorateLetterNo,
-      directorateLetterDate,
-      forwardingLetterNo,
-      govForwardingLetterDate,
-      rtoNo, 
-      vehicleRegistrationNumber,
-      partsCondition,
-      ...restValues
-    } = values;
-  
-    // const locations = `${address1 || ''}|${address2 || ''}`;
-  
-    // const formattedDirectorateDate = directorateLetterDate ? new Date(directorateLetterDate).toISOString().slice(0,10) : '';
-  
-    // const directorateLetterNodate = `${directorateLetterNo || ''}|${formattedDirectorateDate}`;
-  
-    // const formattedGovtDate = govForwardingLetterDate ? new Date(govForwardingLetterDate).toISOString().slice(0, 10) : '';
-  
-    // const govtLetterNoDate = `${forwardingLetterNo || ''}|${formattedGovtDate}`;
-  
-    // // Combine rtoNo and vehicleRegistrationNumber for registrationNo
-    // const registrationNo = `${rtoNo || ''}${vehicleRegistrationNumber ? vehicleRegistrationNumber.toUpperCase() : ''}`;
-  
-    const vehiclePartsConditionDraft = Object.keys(partsCondition || {}).map(partCodeStr => ({
-      vehiclepartcode: parseInt(partCodeStr, 10),
-      condition: partsCondition[partCodeStr],
-    }));
+  const prepareSubmitValues = (values) => {
+    const { partsCondition, ...restValues } = values;
+    const vehiclePartsConditionSubmit = Object.keys(partsCondition || {}).map(
+      (partCodeStr) => ({
+        vehiclepartcode: parseInt(partCodeStr, 10),
+        condition: partsCondition[partCodeStr],
+      })
+    ).filter(part => !isNaN(part.vehiclepartcode));
 
-    const updatedValues = {
-      
-      // locations: locations,
-      // directorateLetterNodate: directorateLetterNodate,
-      // govtLetterNoDate: govtLetterNoDate,
-      // registrationNo: registrationNo,
-      address1: address1,
-      address2: address2,
-      directorateLetterNo: directorateLetterNo,
-      directorateLetterDate: directorateLetterDate,
-      forwardingLetterNo: forwardingLetterNo,
-      govForwardingLetterDate: govForwardingLetterDate,
-      rtoNo: rtoNo,
-      vehicleRegistrationNumber: vehicleRegistrationNumber,
-      vehiclePartsDraft: vehiclePartsConditionDraft,
-      ...restValues,
+    const formatDateForApi = (dateValue) => {
+      if(dayjs(dateValue).isValid())
+      {
+        return dayjs(dateValue).format('YYYY-MM-DD');
+      }
+      return null;
     };
-    
-    console.log("Updated Values Object:",updatedValues);
 
-    console.log("JSON Payload:", JSON.stringify(updatedValues, null, 2));
-  
-    // console.log(values);
-  
-    setIsSubmittingDraft(true);
-    sendToDraftMutate(updatedValues, {
+    return {
+      ...restValues,
+      directorateLetterDate: formatDateForApi(values.directorateLetterDate),
+      govForwardingLetterDate: formatDateForApi(values.govForwardingLetterDate),
+      purchasedate: formatDateForApi(values.purchasedate),
+      
+      manufactureyear: safeParseInt(values.manufactureyear),
+      vehicleprice: safeParseFloat(values.vehicleprice),
+      totalkms: safeParseInt(values.totalkms),
+      depreciatedamount: safeParseFloat(values.depreciatedamount),
+      expenses: safeParseFloat(values.expenses),
+      repairexpenses: safeParseFloat(values.repairexpenses),
+      repairslastsixmonths: safeParseFloat(values.repairslastsixmonths),
+      mviprice: values.mvireportavailable === 'Y' ? safeParseFloat(values.mviprice) : 0,
+      financialYearCode: safeParseInt(values.financialYearCode),
+      departmentCode: safeParseInt(values.departmentCode),
+      registeredDistrict: safeParseInt(values.registeredDistrict),
+      vehicletypecode: safeParseInt(values.vehicletypecode),
+      vehiclemanufacturercode: safeParseInt(values.vehiclemanufacturercode),
+      vehiclePartsDraft: vehiclePartsConditionSubmit,
+    };
+  };
+
+  const handleSaveDraft = (values) => {
+    const submissionValues = prepareSubmitValues(values);
+
+    const payload = { ...submissionValues, applicationCode: applicationCode};
+
+    sendToDraftMutateAsync(payload, {
       onSuccess: (data) => {
-        setIsSubmittingDraft(false);
+        const appCodeFromResult = data?.data?.applicationCode || data?.applicationCode;
         toast({
           title: "Draft Saved.",
-          description: `Draft saved with Application Code: ${data?.applicationCode || 'N/A'}`,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
+          description: `Draft progress saved. Application Code: ${appCodeFromResult}`,
+          status: "success", duration: 3000, isClosable: true,
         });
+        // setCurrentInitialValues(baseInitialValues);
+        // setStep(0);
+        navigate("/da/listvehicledraft");
       },
       onError: (error) => {
-        setIsSubmittingDraft(false);
-        console.error("Error saving draft:", error);
         toast({
           title: "Failed to Save Draft.",
-          description: error?.message || "Something went wrong while saving the draft.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
+          description: error?.response?.data?.message || error?.message || "An error occurred.",
+          status: "error", duration: 5000, isClosable: true,
         });
       },
     });
   };
 
-  const handleFinalSubmit = (values) => {
-    // setIsSubmittingFinal(true);
-    console.log("Final submit:", values);
-    // Implement your API call for final submission here using fetch or another hook
-    // fetch('/draft/final-submit', { // Replace with your actual final submit endpoint
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(values),
-    // })
-    // .then(response => {
-    //   if (!response.ok) {
-    //     throw new Error(`HTTP error! status: ${response.status}`);
-    //   }
-    //   return response.text(); // Or response.json()
-    // })
-    // .then(data => {
-    //   setIsSubmittingFinal(false);
-    //   toast({
-    //     title: "Final Submission Successful.",
-    //     description: data || "Vehicle data submitted successfully.",
-    //     status: "success",
-    //     duration: 3000,
-    //     isClosable: true,
-    //   });
-    //   // Optionally redirect or reset the form
-    // })
-    // .catch((error) => {
-    //   setIsSubmittingFinal(false);
-    //   console.error("Error submitting data:", error);
-    //   toast({
-    //     title: "Final Submission Failed.",
-    //     description: error.message || "Something went wrong during final submission.",
-    //     status: "error",
-    //     duration: 5000,
-    //     isClosable: true,
-    //   });
-    // });
+  const handleFinalSubmit = async (values, setErrors, setTouched) => {
+    let allValid = true;
+    const allErrors = {};
+    const allTouched = {};
+    for (const s of baseSteps) {
+        try { await s.schema.validate(values, { abortEarly: false }); } catch (err) {
+            if (err instanceof yup.ValidationError) {
+                const stepErrors = yupErrorsToFormik(err);
+                Object.assign(allErrors, stepErrors);
+                Object.keys(stepErrors).forEach(key => allTouched[key] = true);
+                allValid = false;
+            }
+        }
+    }
+    if (!allValid) {
+        setErrors(allErrors); setTouched(allTouched, false);
+        toast({ title: "Validation Error.", description: "Please review all steps for errors.", status: "error", duration: 4000, isClosable: true });
+        return;
+    }
+    setErrors({});
+
+    const submissionValues = {...prepareSubmitValues(values), applicationCode: applicationCode};
+
+    sendToFinalMutate(submissionValues, {
+      onSuccess: (data) => {
+        const appCodeFromResult = data?.data?.applicationCode || data?.applicationCode;
+        toast({
+          title: "Final Submission Successful.",
+          description: `Application submitted. App Code: ${appCodeFromResult}`,
+          status: "success", duration: 3000, isClosable: true,
+        });
+        setCurrentInitialValues(baseInitialValues);
+        setStep(0);
+        navigate("/da/dataentryvehicle");
+      },
+      onError: (error) => {
+        toast({
+          title: "Final Submission Failed.",
+          description: error?.response?.data?.message || error?.message || "An error occurred.",
+          status: "error", duration: 5000, isClosable: true,
+        });
+      },
+    });
   };
 
-  const [currentInitialValues, setCurrentInitialValues] = useState(baseInitialValues);
-
-  useEffect(() => {
-    if (isDepartmentSuccess && departmentData?.data?.[0]?.departmentCode) {
-        setCurrentInitialValues(prevValues => ({
-            ...prevValues,
-            departmentCode: departmentData.data[0].departmentCode,
-        }));
-    } else {
-        setCurrentInitialValues(baseInitialValues);
-    }
-}, [isDepartmentSuccess, departmentData]);
+  const resetTheForm = (formikProps) => {
+    formikProps.resetForm({ values: baseInitialValues });
+    setCurrentInitialValues(baseInitialValues);
+    setStep(0);
+    setApplicationCode(null); // <-- VERY IMPORTANT
+    toast({ title: "Form Reset", description: "Form cleared for new entry.", status: "info", duration: 3000, isClosable: true });
+  }
 
   return (
-    <Box bg="paper" shadow="md" w="auto" p={6} m={4} borderRadius="md">
+    <Box bg="white" shadow="md" w="auto" p={{ base: 3, md: 6 }} m={{ base: 2, md: 4 }} borderRadius="md">
       <Formik
+        key={ currentInitialValues.applicationCode || 'new-vehicle-form'}
         initialValues={currentInitialValues}
         enableReinitialize={true}
       >
         {(formikProps) => (
-          <Form>
-            <Stack spacing={6}>
-              <Stepper index={step} colorScheme="teal">
-                {baseSteps.map((s, index) => (
-                  <Step key={index}>
-                    <StepIndicator>
-                      <StepStatus
-                        complete={<StepIcon />}
-                        incomplete={<StepNumber />}
-                        active={<StepNumber />}
-                      />
-                    </StepIndicator>
-                    <Box flexShrink={0}>
-                      <StepTitle>{s.title}</StepTitle>
-                      <StepDescription>{s.description}</StepDescription>
-                    </Box>
-                    <StepSeparator />
-                  </Step>
-                ))}
-              </Stepper>
+            <Form>
+              <Stack spacing={6}>
+                <Stepper index={step} colorScheme="teal" size="sm">
+                  {baseSteps.map((s, index) => (
+                    <Step key={index} onClick={() => setStep(index)} style={{ cursor: 'pointer' }}>
+                      <StepIndicator>
+                        <StepStatus complete={<StepIcon />} incomplete={<StepNumber />} active={<StepNumber />} />
+                      </StepIndicator>
+                      <Box flexShrink={0} textAlign="left">
+                        <StepTitle>{s.title}</StepTitle>
+                        <StepDescription>{s.description}</StepDescription>
+                      </Box>
+                      <StepSeparator />
+                    </Step>
+                  ))}
+                </Stepper>
 
-              {/* Fields components */}
-              <Box p={4}
-                borderWidth="1px"
-                borderRadius="md"
-                borderColor="gray.200"
-              >
-                {renderContent(step, formikProps)}
-              </Box>
+                <Box p={4} borderWidth="1px" borderRadius="md" borderColor="gray.200">
+                  {renderContent(step, formikProps)}
+                </Box>
 
-              <Flex mt={6} justifyContent="space-between">
-                <Button onClick={handlePrev} isDisabled={step === 0} variant="outline">Previous</Button>
-                <Flex>
-                  {step < baseSteps.length - 1 ? (
-                    <Button onClick={() => handleNext(formikProps.values, formikProps.setErrors, formikProps.setTouched)}>
-                      Next
-                    </Button>
-                  ) : (
-                    <>
-                                            <Button
-                        mr={2}
-                        onClick={() => handleSaveDraft(formikProps.values)}
-                        colorScheme="blue"
-                        variant="outline"
-                        isLoading={isSubmittingDraft || isDraftSending}
-                        loadingText="Saving Draft..."
-                        isDisabled={isSubmittingDraft || isDraftSending}
-                      >
-                        Save As Draft
-                      </Button>
-                      <Button
-                        onClick={() => handleFinalSubmit(formikProps.values)}
-                        colorScheme="green"
-                        isLoading={isSubmittingFinal}
-                        loadingText="Submitting..."
-                        isDisabled={isSubmittingFinal}
-                      >
-                        Final Submit
-                      </Button>
-                    </>
-                  )}
+                <Flex mt={4} justifyContent="flex-end" display={{ base: "none", md: "flex" }}>
+                  <Button
+                    onClick={() => {
+                      resetTheForm(formikProps)
+                    }}
+                    variant="ghost" colorScheme="red" size="sm" mr="auto"
+                  >
+                    Clear & Reset Form
+                  </Button>
                 </Flex>
-              </Flex>
-            </Stack>
-          </Form>
+
+                <Flex mt={2} justifyContent="space-between" direction={{ base: "column-reverse", sm: "row" }} gap={2}>
+                   <Button
+                    onClick={() => resetTheForm(formikProps)}
+                    variant="ghost" colorScheme="red" size="sm" 
+                    display={{ base: "block", md: "none" }} width="full"
+                  >
+                    Clear Form
+                  </Button>
+
+                  <Button onClick={handlePrev} isDisabled={step === 0} variant="outline" size="sm">Previous</Button>
+                  <Flex gap={2}>
+                    {step < baseSteps.length - 1 ? (
+                      <Button 
+                      onClick={() => handleNext(formikProps.values, formikProps.setErrors, formikProps.setTouched)}
+                      size="sm"
+                      isLoading={isDraftSending}
+                      loadingText="Saving..."
+                      >
+                        Next
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          mr={{ base: 0, sm: 2}}
+                          onClick={() => handleSaveDraft(formikProps.values)}
+                          colorScheme="blue" variant="outline" isLoading={isDraftSending}
+                          loadingText="Saving..."
+                          isDisabled={isDraftSending || isFinalSending}
+                          size="sm"
+                        >
+                          Save As Draft
+                        </Button>
+                        <Button
+                          onClick={() => handleFinalSubmit(formikProps.values, formikProps.setErrors, formikProps.setTouched)}
+                          colorScheme="green" isLoading={isFinalSending} loadingText="Submitting..."
+                          isDisabled={isDraftSending || isFinalSending}
+                          size="sm"
+                        >
+                          Final Submit
+                        </Button>
+                      </>
+                    )}
+                  </Flex>
+                </Flex>
+              </Stack>
+            </Form>
         )}
       </Formik>
     </Box>

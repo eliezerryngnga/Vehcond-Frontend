@@ -52,14 +52,11 @@ const SignInForm = () => {
         case "DA":
           navigate("/da/dashboard");
           break;
-        case "CH":
-          navigate("/ch/dashboard");
+        case "TD":
+          navigate("/td/dashboard");
           break;
-        case "CS":
-          navigate("/cs/dashboard");
-          break;
-        case "EST":
-          navigate("/est/dashboard");
+        case "ADMIN":
+          navigate("/admin/dashboard");
           break;
         default:
           break;

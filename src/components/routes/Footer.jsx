@@ -9,7 +9,21 @@ import {
 import digitalIndia from "../../assets/digital.png";
 import NIC_Logo from "../../assets/Nic_logo2-01.png";
 
-const Footer = () => {
+
+const Footer = ({fontSize, digitalIndiaSrc, nicSrc, imageMaxWidth, imageMaxHeight}) => {
+
+  const d_fontSize = "17px"    ;
+  const d_digitalIndia = digitalIndia;
+  const d_nicSrc = NIC_Logo;
+  const d_imageMaxWidth = "200px";
+  const d_imageMaxHeight = "200px";
+  
+  const currentFontSize = fontSize || d_fontSize;
+  const currentDigitalIndia = digitalIndiaSrc || d_digitalIndia;
+  const currentNicLogo = nicSrc || d_nicSrc;
+  const currentImageMaxWidth = imageMaxWidth || d_imageMaxWidth;
+  const currentImageMaxHeight = imageMaxHeight || d_imageMaxHeight;
+
   return (
     <Box as="footer" bg="#ffffff" py={4} boxShadow="0px -4px 5px rgba(0,0,0,0.1)">
             <Flex 
@@ -20,10 +34,10 @@ const Footer = () => {
             >
                 {/* Left Side - Text */}
                 <Box>
-                  <Text fontSize="17px" color="gray.600" textAlign={{ base: 'center', md: 'left', lg: 'center' }}>
+                  <Text fontSize={currentFontSize} color="gray.600" textAlign={{ base: 'center', md: 'left', lg: 'center' }}>
                     Content owned by Secretariat Administration Department,Government of Meghalaya
                   </Text>
-                  <Text fontSize="17px" color="gray.600" textAlign={{ base: 'center', md: 'left', lg: 'center' }}>
+                  <Text fontSize={currentFontSize} color="gray.600" textAlign={{ base: 'center', md: 'left', lg: 'center' }}>
                     Developed and hosted by National Informatics Center, Meghalaya
                   </Text>
                 </Box>
@@ -37,17 +51,17 @@ const Footer = () => {
                     
                 >  
                     <Image 
-                    src={digitalIndia}
-                    maxW="200px" 
-                    maxH="200px"
+                    src={currentDigitalIndia}
+                    maxW={currentImageMaxWidth} 
+                    maxH={currentImageMaxHeight}
                     alt="Digital India"
                      />
                     
                     <Image 
-                    src={NIC_Logo} 
-                    alt="NIC Logo"
-                    maxW="200px"
-                    maxH="200px"  />
+                    src={currentNicLogo} 
+                    alt="National Informatics Centre Logo"
+                    maxW={currentImageMaxWidth}
+                    maxH={currentImageMaxHeight}  />
                 </Box>
             </Flex>
         </Box>

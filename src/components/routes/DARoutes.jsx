@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { Center, Spinner, Stack, useDisclosure } from "@chakra-ui/react";
+import { Box, Center, Spinner, Stack, useDisclosure } from "@chakra-ui/react";
 import ScrollToTop from "./ScrollToTop";
 import LogoutForm from "../../forms/auth/LogoutForm";
 import { useFetchUsersProfile } from "../../hooks/userQueries";
@@ -13,8 +13,6 @@ import UsersSidebarDrawer from "../navigations/users/UsersSidebarDrawer";
 
 import Footer from "../routes/Footer";
 
-// import VehicleRegistrationForm from "../../pages/vehicleDataEntry/VehicleDataEntry";
- 
 const DARoutes = () => {
 
   // Disclosures
@@ -54,22 +52,26 @@ const DARoutes = () => {
         
       />
     
-      <Stack minH="100dvh" justifyContent="space-between" spacing={8} bg="#C8E8F5">
+      <Stack minH="100dvh" justifyContent="space-between" spacing={8} bg="#2483C5">
         <Stack direction="row" spacing={0}>
-          <UsersSidebar profile={profileQuery?.data?.data} />
-          {/* <UsersSidebarDrawer 
+          <Box display={{base: "none", lg: "block"}}>
+            <UsersSidebar profile={profileQuery?.data?.data} />
+          </Box>
+          
+          <UsersSidebarDrawer 
                   onOpen={drawer.onOpen} 
                   isOpen={drawer.isOpen} 
                   onClose={drawer.onClose} 
-                  navHeight = {navHeight}
-                /> */}
-          <Stack spacing={10} w="full" ml={{ base: 0, lg: 60 }}>
+                  profile={profileQuery?.data?.data}
+                  navHeight="200px"
+                />
+          <Stack spacing={10} w="full" ml={{ base: 0, lg: "258px" }} flex="1" p={4}>
             <Outlet />
           </Stack>
           
         </Stack>
-        <Stack spacing={10} w="full" ml={{base: 0, lg: 60}}>
-          {/* <Footer /> */}
+        <Stack spacing={10} ml={{base: 0, lg: 60}}>
+          <Footer fontSize={18} />
         </Stack>
       </Stack>
       

@@ -1,3 +1,30 @@
+
+export const downloadFileFromResponse = (response, defaultFilename = 'report.pdf') => {
+  // Extract filename from the header
+  const contentDisposition = response.headers['content-disposition'];
+  let filename = defaultFilename;
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+    if (filenameMatch && filenameMatch.length > 1) {
+      filename = filenameMatch[1];
+    }
+  }
+
+  // The blob is in response.data due to responseType: 'blob'
+  const blob = new Blob([response.data], { type: response.headers['content-type'] });
+  const url = window.URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+
+  // Cleanup
+  link.parentNode.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
 export const downloadPDF = (blob, title) => {
   let link = document.createElement("a");
   let url = window.URL.createObjectURL(blob);

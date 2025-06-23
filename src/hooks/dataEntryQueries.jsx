@@ -42,9 +42,8 @@ const fetchFinancialYear = () =>
         })
     };
     
-    export const useFetchFinancialYear = () => {
-        
-        return useQuery ({
+export const useFetchFinancialYear = () => {
+    return useQuery ({
             queryKey:[ "fetch-financial-year"],
             queryFn : fetchFinancialYear,
         })
@@ -68,6 +67,22 @@ export const useFetchDepartment = () =>
     })
 }
 
+//GET : For Select Field
+const fetchDepartmentForSelect = () =>
+{
+    return request ({
+        url: `/department/all-for-selection`,
+        method: "get"
+    })
+}
+
+export const useFetchDepartmentForSelect = () =>
+{
+    return useQuery ({
+        queryKey: ["fetch-department-for-select"],
+        queryFn: fetchDepartmentForSelect,
+    })
+}
 //Get: Vehicle Type
 const fetchVehicleType = () =>
 {
@@ -123,7 +138,7 @@ export const useFetchVehicleParts = () =>
 //POST
 const draft = (data) => {
     return request ({
-        url: `/draft`,
+        url: "/draft",
         method: "post",
         data: data,
     })
@@ -141,3 +156,175 @@ export const useSendToDraft = () => {
     });
 };
 
+//POST
+const final = (data) => {
+    return request ({
+        url: "/final-submit",
+        method: "post",
+        data: data,
+    })
+}
+
+export const useSendToFinal = () => {
+    return useMutation ({
+        mutationFn: final,
+        onSuccess: (data, variables, context) => {
+            console.log("Data sent to draft successfully: ", data);
+        },
+        onError: (error, variables, context) => {
+            console.log("Error sending data to draft: ", error);
+        },
+    });
+};
+
+//GET : List of Draft Vehicle
+const fetchListDrafts = ({ queryKey }) => {
+    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+
+    if(search)
+    {
+        params.append('search', search);
+    }
+
+    return request({
+        url: `/draft/list?${params.toString()}`,
+        method: "get",
+    })
+}
+
+export const useFetchListDrafts = (pageNumber, pageSize, searchTerm) => {
+    return useQuery({
+        queryKey: ["fetch-list-drafts", pageNumber, pageSize, searchTerm],
+        queryFn: fetchListDrafts,
+        keepPreviousData: true,
+    })
+}
+
+// GET : LIST of Rejected Vehicle
+const fetchRejectList = ({ queryKey }) => {
+    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+
+    if(search)
+    {
+        params.append('search', search);
+    }
+
+    return request({
+        url: `/draft/reject-list?${params.toString()}`,
+        method: "get",
+    })
+}
+
+export const useFetchRejectedList = (pageNumber, pageSize, searchTerm) => {
+    return useQuery({
+        queryKey: ["fetch-reject-list", pageNumber, pageSize, searchTerm],
+        queryFn: fetchRejectList,
+        keepPreviousData: true,
+    })
+}
+
+
+// GET : List of Final submitted Vehicles
+const fetchListFinals = ({ queryKey }) => {
+    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+
+    if(search)
+    {
+        params.append('search', search);
+    }
+
+    return request({
+        url: `/final-submit/list?${params.toString()}`,
+        method: "get",
+    })
+}
+
+export const useFetchListFinals = (pageNumber, pageSize, searchTerm) => {
+    return useQuery({
+        queryKey: ["fetch-list-finals", pageNumber, pageSize, searchTerm],
+        queryFn: fetchListFinals,
+        keepPreviousData: true,
+    })
+}
+
+
+
+// GET : Vehicles TO BE LIFTED
+const fetchVehiclesToLift = ({queryKey}) => {
+    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    
+    const params = new URLSearchParams({
+        page: page.toString(),
+        size: size.toString(),
+    });
+
+    if(search)
+    {
+        params.append('search', search);
+    }
+
+    return request ({
+        url: `/transport-lifting/allotted-list?${params.toString()}`,
+        method: "get",
+    })
+}
+
+export const useFetcVehiclesToLift = (pageNumber, pageSize, searchTerm) => {
+    return useQuery ({
+        queryKey: ["fetch-vehicles-to-lift", pageNumber, pageSize, searchTerm],
+        queryFn: fetchVehiclesToLift,
+        keepPreviousData: true,
+    })   
+}
+
+
+//Get: PageUrl
+const fetchPageUrl = () =>
+{
+    return request ({
+        url:"/pageUrl",
+        method: "get"
+    })
+}
+
+export const useFetchPageUrl = () =>
+{
+    return useQuery ({
+        queryKey: ["fetch-page-url"],
+        queryFn: fetchPageUrl,
+    })
+
+}
+
+
+
+//GET : Fetch a Vehicle For Edit
+const fetchDraftByCode = (applicationCode) => {
+    return request ({
+        url: `/draft/details/${applicationCode}`,
+        method : "get",
+    })
+} 
+
+export const useFetchDraftByCode = (applicationCode) => {
+    return useQuery ({
+        queryKey: ["fetch-draft-by-code", applicationCode],
+        queryFn: () => fetchDraftByCode(applicationCode),
+        enabled: !!applicationCode,
+    })
+}

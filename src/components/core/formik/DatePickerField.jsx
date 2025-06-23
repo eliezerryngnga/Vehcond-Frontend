@@ -56,7 +56,7 @@ const DatePickerField = ({ label, isRequired = true, ...props }) => {
     const handleDateClick = (day) => {
         const newDate = currentDate.date(day);
         setSelectedDate(newDate);
-        helpers.setValue(newDate.toISOString());
+        helpers.setValue(newDate.format("YYYY-MM-DD"));
         setIsOpen(false);
     };
 

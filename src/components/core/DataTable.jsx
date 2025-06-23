@@ -9,6 +9,7 @@ import {
   Select,
   Text,
   useColorModeValue,
+  chakra
 } from "@chakra-ui/react";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
 
@@ -64,7 +65,8 @@ export const DTh = ({ children, isNumeric = false, ...others }) => {
     <Box
       as="th"
       textAlign={isNumeric ? "right" : "left"}
-      whiteSpace="nowrap"
+      // whiteSpace="nowrap"
+      whiteSpace="normal"
       fontSize="sm"
       fontWeight="medium"
       color="body"
@@ -79,7 +81,7 @@ export const DTh = ({ children, isNumeric = false, ...others }) => {
       __css={{
         borderCollapse: "collapse",
       }}
-      px={4}
+      px={{base: 4, lg: 3, '2xl': 4 }}
       py={2}
       {...others}
     >
@@ -109,8 +111,9 @@ export const DTd = ({ children, isNumeric = false }) => {
       __css={{
         borderCollapse: "collapse",
       }}
-      px={4}
+      px={{base: 3, lg: 4}}
       py={2}
+      fontSize="sm"
     >
       {children}
     </Box>

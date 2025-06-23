@@ -72,7 +72,7 @@ const UsersNavbar = ({ openLogout, profile }) => {
           />
 
           <Box >
-            <Text> Vehicle Condemnation 2.0</Text>
+            <Text> Vehicle Condemnation</Text>
           </Box>
 
           

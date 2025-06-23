@@ -4,62 +4,52 @@ import {
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
-  DrawerHeader,
   DrawerBody,
-  DrawerFooter,
   useColorModeValue,
-  Link,
-  Stack,
-  Divider,
-  Heading,
-  HStack,
-  Text,
   Box,
   IconButton,
 
 } from "@chakra-ui/react";
-import { NavLink } from "react-router-dom";
 
-import { useFetchMenuLinks } from "../../../hooks/uiQueries";
+// import { useFetchMenuLinks } from "../../../hooks/uiQueries";
 
 import { MdOutlineMenu } from "react-icons/md";
 
-import UsersSidebar from "./UsersSidebar";
-
 import UsersSidebar1 from "./UsersSidebar1";
 
-const UsersSidebarDrawer = ({ isOpen, onOpen, onClose, navHeight }) => {
-  // Queries
-  const menuQuery = useFetchMenuLinks();
-  const sortedMenu = menuQuery?.data?.data?.sort(
-    (a, b) => a.sortOrder - b.sortOrder
-  );
+const UsersSidebarDrawer = ({ isOpen, onOpen, onClose, navHeight, profile }) => {
+
 
   return (
   
   <Box 
-    bg="blue"
+    bg="blue.500"
     position="fixed"
     top={20}
-
-    zIndex="10"
-    roundedTopRight={29}
-    roundedBottomRight={29}
+    left={0}
+    zIndex="sticky"
+    roundedTopRight="xl"
+    roundedBottomRight="xl"
+    display={{base: "block", lg: "none"}}
+    boxShadow="md"
   >
-     <IconButton
-                  variant="ghost"
-                  icon={<MdOutlineMenu size={20} />}
-                  onClick={onOpen}
-                  color="white"
-                />
-                
+    <IconButton
+      variant="ghost"
+      size="lg"
+      icon={<MdOutlineMenu size={20} />}
+      onClick={onOpen}
+      color="white"
+      aria-label="Open Menu"
+      m={0}
+
+      _hover={{bg: "blue.600"}}
+    />
+
     <Drawer
       as="header"
       isOpen={isOpen}
       placement="left"
       onClose={onClose}
-      // finalFocusRef={btnRef}
-      
     >
       <DrawerOverlay
         bg="blackAlpha.700"
@@ -67,41 +57,12 @@ const UsersSidebarDrawer = ({ isOpen, onOpen, onClose, navHeight }) => {
         backdropBlur="18px"
         backdropSaturate="180%"
       />
-      <DrawerContent bg={useColorModeValue("white", "zinc.950")} mt={navHeight}>
-        {/* <DrawerCloseButton /> */}   
-        {/* <DrawerHeader>
-          <Heading size="md">GAD Quarters</Heading>
-        </DrawerHeader>*/}
-        <DrawerCloseButton /> 
+      <DrawerContent bg={useColorModeValue("white", "zinc.950")}>
+        <DrawerCloseButton />   
 
-        <DrawerBody as="nav">
-          <Stack spacing={1}>
-
-          {/* <UsersSidebar /> */}
-
-          <UsersSidebar1 />
-
-            {/* <Text fontSize="2xs" mb={2} letterSpacing="wider">
-              MENU
-            </Text>
-            {sortedMenu?.map((link) => (
-              <Link
-                key={link.url}
-                as={NavLink}
-                variant="sidebar"
-                to={link.url}
-                onClick={onClose}
-              >
-                <HStack>
-                  <MdIcon iconName={link.icon} />
-                  <Text>{link.label}</Text>
-                </HStack>
-              </Link>
-            ))} */}
-
-          </Stack>
+        <DrawerBody as="nav" p={0} overflowY="auto">
+          <UsersSidebar1 profile={profile} onClose={onClose} />
         </DrawerBody>
-        <DrawerFooter />
       </DrawerContent>
     </Drawer>
   </Box>

@@ -10,7 +10,7 @@ import { Field } from "formik";
 const InputField = ({ name, label, isRequired = true, ...others }) => {
   return (
     <Field name={name}>
-      {({ field, meta }) => (
+      {({ field, meta, form }) => (
         <FormControl
           isRequired={isRequired}
           isInvalid={meta.error && meta.touched}
@@ -22,6 +22,11 @@ const InputField = ({ name, label, isRequired = true, ...others }) => {
             id={name}
             {...field}
             {...others}
+            onFocus={(e) => {
+              if (e.target.value === "0") {
+                form.setFieldValue(name, "");
+              }
+            }}
           />
           <FormErrorMessage>{meta.error}</FormErrorMessage>
         </FormControl>

@@ -3,10 +3,6 @@ import Main from "../../../components/core/semantics/Main";
 import Section from "../../../components/core/semantics/Section";
 import { Container, Box } from "@chakra-ui/react";
 
-import Footer from "../../../components/routes/Footer";
-
-import UserSidebar from "../../../components/navigations/users/UsersSidebar";
-
 import TableContainer from "../../../components/core/Table";
 
 import DataTableContainer from "../../../components/core/DataTable";
@@ -40,7 +36,7 @@ const DADashboardPage = ({profile}) => {
             pageSize={pageSize}
             setPageSize={setPageSize}
           />*/}
-          {/*<DataTableContainer /> */}
+          <DataTableContainer />
 
           <Box bg={"blue.50"}>
             <TableContainer bg="black" />
