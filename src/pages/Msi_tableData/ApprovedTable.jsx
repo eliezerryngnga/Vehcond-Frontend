@@ -55,8 +55,19 @@ const ApprovedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     return availableDates.map(dateInfo => dateInfo.year);
   }, [availableDates]);
 
+  const monthLabels = {
+    1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+    7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+  };
+  
   const availableMonthsForSelectedYear = useMemo(() => {
-    if(!filterValues.year || availableDates.length === 0)
+    if(!filterValues.year)
+    {
+        return Object.keys(monthLabels).map(Number);
+        
+    }
+
+    if(availableDates.length === 0)
     {
         return [];
     }
@@ -64,12 +75,9 @@ const ApprovedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     const yearData = availableDates.find(d => d.year == filterValues.year);
 
     return yearData ? yearData.months : [];
-  }, [filterValues.year, availableDates]);
+  }, [filterValues.year, availableDates, monthLabels]);
 
-  const monthLabels = {
-    1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
-    7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
-  };
+  
 
   const {
     data: response,
@@ -93,12 +101,6 @@ const ApprovedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     setPageNumber(0);
   }, [debouncedSearch, filterValues.year, filterValues.month]);
 
-  useEffect(() => {
-    if (filterValues.year && !availableMonthsForSelectedYear.includes(Number(filterValues.month)))
-    {
-        setMonth('');
-    }
-  }, [filterValues.year, availableMonthsForSelectedYear, filterValues.month, setMonth]); 
   const containerBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.600', 'gray.400');
   
@@ -165,7 +167,7 @@ const ApprovedTable = ({filterValues, setSearch, setYear, setMonth}) => {
                             maxW="130px"
                             value={filterValues.month}
                             onChange={(e) => setMonth(e.target.value)}
-                            isDisabled={!filterValues.year || availableMonthsForSelectedYear.length === 0}
+                            isDisabled={!filterValues.year || availableMonthsForSelectedYear.length === 0 }
                         >
                             {availableMonthsForSelectedYear.map(monthValue => <option key={monthValue} value={monthValue}>{monthLabels[monthValue]}</option>)}
                         </Select>

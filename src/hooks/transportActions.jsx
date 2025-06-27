@@ -134,7 +134,7 @@ const fetchPlaceBeforeVcc = ({ queryKey }) => {
         page: page.toString(),
         size: size.toString(),
     });
-
+         
     if(search)
     {
         params.append('search', search);
@@ -145,7 +145,7 @@ const fetchPlaceBeforeVcc = ({ queryKey }) => {
         params.append('year', year);
     }
 
-    if(month != null && year !== '')
+    if(month != null && month !== '')
     {
         params.append('month', month);
     }
@@ -196,7 +196,7 @@ export const usePlaceVehicleBeforeVcc = () => {
 
 // GET: Vehicle to Be Priced/ Currently under VCC
 const fetchPriceFixedByTc = ({queryKey}) => {
-    const [_key, page = 0, size=10, search = ''] = queryKey;
+    const [_key, page = 0, size=10, search = '', year, month] = queryKey;
 
     const params = new URLSearchParams ({
         page: page.toString(),
@@ -205,7 +205,17 @@ const fetchPriceFixedByTc = ({queryKey}) => {
 
     if(search)
     {
-        params.append('search', search)
+        params.append('search', search);
+    }
+
+    if(year != null && year !== '')
+    {
+        params.append('year', year);
+    }
+
+    if(month != null && month !== '')
+    {
+        params.append('month', month);
     }
 
     return request ({
@@ -214,9 +224,9 @@ const fetchPriceFixedByTc = ({queryKey}) => {
     })
 }
 
-export const useFetchPriceFixedByTc = (pageNumber, pageSize, searchTerm) => {
+export const useFetchPriceFixedByTc = (pageNumber, pageSize, searchTerm, year, month) => {
     return useQuery ({
-        queryKey: ['fetch-price-fixed-by-tc', pageNumber, pageSize, searchTerm],
+        queryKey: ['fetch-price-fixed-by-tc', pageNumber, pageSize, searchTerm, year, month],
         queryFn: fetchPriceFixedByTc,
         keepPreviousData: true,
     })
@@ -254,7 +264,7 @@ export const usePriceVehicle = () => {
 
 // GET : Vehicle to be allotted
 const fetchToBeAllotted = ({ queryKey}) => {
-    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    const [_key, page = 0, size = 10, search = '', year, month] = queryKey;
 
     const params = new URLSearchParams ({
         page: page.toString(),
@@ -263,7 +273,17 @@ const fetchToBeAllotted = ({ queryKey}) => {
 
     if(search)
     {
-        params.append('search', search)
+        params.append('search', search);
+    }
+
+    if(year != null && year !== '')
+    {
+        params.append('year', year);
+    }
+
+    if(month != null && month !== '')
+    {
+        params.append('month', month);
     }
 
     return request ({
@@ -272,9 +292,9 @@ const fetchToBeAllotted = ({ queryKey}) => {
     })
 }
 
-export const useFetchToBeAllotted = (pageNumber, pageSize, searchTerm) => {
+export const useFetchToBeAllotted = (pageNumber, pageSize, searchTerm, year, month) => {
     return useQuery ({
-        queryKey: ['fetch-to-be-allotted', pageNumber, pageSize, searchTerm],
+        queryKey: ['fetch-to-be-allotted', pageNumber, pageSize, searchTerm, year, month],
         queryFn: fetchToBeAllotted,
         keepPreviousData: true,
     })
@@ -312,16 +332,27 @@ export const useAllotingVehicle = () => {
 
 //Allotted Vehicles
 const fetchAllottedVehicles = ({ queryKey}) => {
-    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    const [_key, page = 0, size = 10, search = '', year, month] = queryKey;
 
     const params = new URLSearchParams ({
         page: page.toString(),
         size: size.toString(),
     })
 
+    
     if(search)
     {
-        params.append('search', search)
+        params.append('search', search);
+    }
+
+    if(year != null && year !== '')
+    {
+        params.append('year', year);
+    }
+
+    if(month != null && month !== '')
+    {
+        params.append('month', month);
     }
 
     return request ({
@@ -330,9 +361,9 @@ const fetchAllottedVehicles = ({ queryKey}) => {
     })
 }
 
-export const useFetchAllottedVehicles = (pageNumber, pageSize, searchTerm) => {
+export const useFetchAllottedVehicles = (pageNumber, pageSize, searchTerm, year, month) => {
     return useQuery ({
-        queryKey: ['fetch-allotted-vehicles', pageNumber, pageSize, searchTerm],
+        queryKey: ['fetch-allotted-vehicles', pageNumber, pageSize, searchTerm, year, month],
         queryFn: fetchAllottedVehicles,
         keepPreviousData: true,
     })
@@ -487,7 +518,7 @@ export const useFetchNonLiftedVehicle = (pageNumber, pageSize, searchTerm) => {
 
 //GET - Tendered Vehicles
 const fetchTenderedVehicles = ({ queryKey }) => {
-    const [_key, page = 0, size = 10, search = ''] = queryKey;
+    const [_key, page = 0, size = 10, search = '', year, month] = queryKey;
     
     const params = new URLSearchParams({
         page: page.toString(),
@@ -498,16 +529,24 @@ const fetchTenderedVehicles = ({ queryKey }) => {
     {
         params.append('search', search);
     }
+     if(year != null && year !== '')
+    {
+        params.append('year', year);
+    }
 
+    if(month != null && month !== '')
+    {
+        params.append('month', month);
+    }
     return request ({
         url: `/transport-action/tendered-vehicles?${params.toString()}`,
         method: "get",
     })
 }
 
-export const useFetchTenderedVehicle = (pageNumber, pageSize, searchTerm) => {
+export const useFetchTenderedVehicle = (pageNumber, pageSize, searchTerm, year, month) => {
     return useQuery ({
-        queryKey: ["fetch-tendered-vehicles", pageNumber, pageSize, searchTerm],
+        queryKey: ["fetch-tendered-vehicles", pageNumber, pageSize, searchTerm, year, month],
         queryFn: fetchTenderedVehicles,
         keepPreviousData: true,
     })   

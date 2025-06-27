@@ -32,11 +32,11 @@ import {
 import { useDebounce } from "use-debounce";
 
 import { useFetchAllottedVehicles } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchAllottedVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
-const AllottedTable = ({filterValues, setSearch, setYear, setMonth}) => {
+const AllottedTable = ({filterValues, setSearch, setYear, setMonth, onOpenModal}) => {
  
     const [pageSize, setPageSize] = useState(10);
   const [pageNumber, setPageNumber] = useState(0);
@@ -44,11 +44,11 @@ const AllottedTable = ({filterValues, setSearch, setYear, setMonth}) => {
   const [debouncedSearch] = useDebounce(filterValues.search, 500);
   const 
   {
-    data: approvedDatesResponse,
+    data: allottedDatesResponse,
     isLoading: isLoadingDates,
-  } = useFetchApprovedVehicleDates();
+  } = useFetchAllottedVehicleDates();
 
-  const availableDates = approvedDatesResponse?.data ?? [];
+  const availableDates = allottedDatesResponse?.data ?? [];
 
   const availableYears = useMemo(() => {
     return availableDates.map(dateInfo => dateInfo.year);
@@ -77,7 +77,7 @@ const AllottedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     error,
     isFetching,
     isPreviousData
-  } = useFetchAllottedVehicles(pageNumber, pageSize, debouncedSearch);
+  } = useFetchAllottedVehicles(pageNumber, pageSize, debouncedSearch, filterValues.year, filterValues.month);
 
   const fetchedData = response?.data?.content ?? [];
   const totalPages = response?.data?.totalPages ?? 0;
@@ -92,12 +92,7 @@ const AllottedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     setPageNumber(0);
   }, [debouncedSearch, filterValues.year, filterValues.month]);
 
-  useEffect(() => {
-    if (filterValues.year && !availableMonthsForSelectedYear.includes(Number(filterValues.month)))
-    {
-        setMonth('');
-    }
-  }, [filterValues.year, availableMonthsForSelectedYear, filterValues.month, setMonth]); 
+  
   const containerBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.600', 'gray.400');
   
@@ -143,7 +138,6 @@ const AllottedTable = ({filterValues, setSearch, setYear, setMonth}) => {
                             }}
                         />
                     </VStack>
-
                     
                     {/* Right Side - Search Field */}
                     <HStack spacing={2} width={{ base: '100%', md: 'auto' }}>
@@ -225,7 +219,7 @@ const AllottedTable = ({filterValues, setSearch, setYear, setMonth}) => {
                                         <DTd>
                                             <HStack spacing={2}>
                                                 <Button size="sm" colorScheme="teal" variant="outline"
-                                                    //onClick
+                                                    onClick={() => onOpenModal(row)}
                                                 >
                                                     Print
                                                 </Button>

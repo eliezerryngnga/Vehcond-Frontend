@@ -32,7 +32,7 @@ import {
 import { useDebounce } from "use-debounce";
 
 import { useFetchNonLiftedVehicle } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchNonLiftedVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
@@ -45,11 +45,11 @@ const NonLiftedVehicleTable = ({filterValues, setSearch, setYear, setMonth}) => 
   const [debouncedSearch] = useDebounce(filterValues.search, 500);
   const 
   {
-    data: approvedDatesResponse,
+    data: nonLiftedDatesResponse,
     isLoading: isLoadingDates,
-  } = useFetchApprovedVehicleDates();
+  } = useFetchNonLiftedVehicleDates();
 
-  const availableDates = approvedDatesResponse?.data ?? [];
+  const availableDates = nonLiftedDatesResponse?.data ?? [];
 
   const availableYears = useMemo(() => {
     return availableDates.map(dateInfo => dateInfo.year);

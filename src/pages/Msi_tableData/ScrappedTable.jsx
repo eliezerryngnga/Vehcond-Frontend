@@ -32,7 +32,7 @@ import {
 import { useDebounce } from "use-debounce";
 
 import { useFetchScrappedVehicle } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchScrapVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
@@ -44,11 +44,11 @@ const ScrappedTable = ({filterValues, setSearch, setYear, setMonth}) => {
   const [debouncedSearch] = useDebounce(filterValues.search, 500);
   const 
   {
-    data: approvedDatesResponse,
+    data: scrappedDatesResponse,
     isLoading: isLoadingDates,
-  } = useFetchApprovedVehicleDates();
+  } = useFetchScrapVehicleDates();
 
-  const availableDates = approvedDatesResponse?.data ?? [];
+  const availableDates = scrappedDatesResponse?.data ?? [];
 
   const availableYears = useMemo(() => {
     return availableDates.map(dateInfo => dateInfo.year);

@@ -63,7 +63,8 @@ const validationSchemaStep_1 = yup.object({
     .string()
     .required("Premises cannot be blank"),
   address1: yup
-    .string(),
+    .string()
+    .required("First address cannot be blank"),
   address2: yup
     .string(),
   directorateLetterNo: yup
@@ -595,10 +596,10 @@ const VehicleRegistrationForm = () => {
 
     sendToFinalMutate(submissionValues, {
       onSuccess: (data) => {
-        const appCodeFromResult = data?.data?.applicationCode || data?.applicationCode;
+        // const appCodeFromResult = data?.data?.applicationCode || data?.applicationCode;
         toast({
           title: "Final Submission Successful.",
-          description: `Application submitted. App Code: ${appCodeFromResult}`,
+          description: `Application submitted`,
           status: "success", duration: 3000, isClosable: true,
         });
         setCurrentInitialValues(baseInitialValues);

@@ -32,7 +32,7 @@ import {
 import { useDebounce } from "use-debounce";
 //TODO fetch approved data
 import { useFetchTenderedVehicle } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchTenderedVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
@@ -46,11 +46,11 @@ const TenderedTable = ({filterValues, setSearch, setYear, setMonth}) => {
   const [debouncedSearch] = useDebounce(filterValues.search, 500);
   const 
   {
-    data: approvedDatesResponse,
+    data: tenderedDatesResponse,
     isLoading: isLoadingDates,
-  } = useFetchApprovedVehicleDates();
+  } = useFetchTenderedVehicleDates();
 
-  const availableDates = approvedDatesResponse?.data ?? [];
+  const availableDates = tenderedDatesResponse?.data ?? [];
 
   const availableYears = useMemo(() => {
     return availableDates.map(dateInfo => dateInfo.year);
@@ -79,7 +79,7 @@ const TenderedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     error,
     isFetching,
     isPreviousData
-  } = useFetchTenderedVehicle(pageNumber, pageSize, debouncedSearch);
+  } = useFetchTenderedVehicle(pageNumber, pageSize, debouncedSearch, filterValues.year, filterValues.month);
 
   // --- Derived Data specific to this table ---
   const fetchedData = response?.data?.content ?? [];
@@ -95,12 +95,6 @@ const TenderedTable = ({filterValues, setSearch, setYear, setMonth}) => {
       setPageNumber(0);
     }, [debouncedSearch, filterValues.year, filterValues.month]);
   
-    useEffect(() => {
-      if (filterValues.year && !availableMonthsForSelectedYear.includes(Number(filterValues.month)))
-      {
-          setMonth('');
-      }
-    }, [filterValues.year, availableMonthsForSelectedYear, filterValues.month, setMonth]); 
     const containerBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.600', 'gray.400');
     

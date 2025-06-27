@@ -17,7 +17,7 @@ export const useFetchApprovedVehicleDates = () => {
 
 const fetchCondemVehicleDates = () => {
     return request ({
-        url: "/dates/approved",
+        url: "/dates/condemned-vehicle",
         method: "get"
     });
 };
@@ -31,7 +31,7 @@ export const useFetchCondemVehicleDates = () => {
 
 const fetchCirculatedVehicleDates = () => {
     return request ({
-        url: "/dates/approved",
+        url: "/dates/circulated",
         method: "get"
     });
 };

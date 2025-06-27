@@ -32,7 +32,7 @@ import {
 import { useDebounce } from "use-debounce";
 
 import { useFetchLiftedVehicle } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchLiftedVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
@@ -45,11 +45,11 @@ const LiftedTable = ({filterValues, setSearch, setYear, setMonth}) => {
    const [debouncedSearch] = useDebounce(filterValues.search, 500);
    const 
    {
-     data: approvedDatesResponse,
+     data: liftedDatesResponse,
      isLoading: isLoadingDates,
-   } = useFetchApprovedVehicleDates();
+   } = useFetchLiftedVehicleDates();
  
-   const availableDates = approvedDatesResponse?.data ?? [];
+   const availableDates = liftedDatesResponse?.data ?? [];
  
    const availableYears = useMemo(() => {
      return availableDates.map(dateInfo => dateInfo.year);
@@ -94,12 +94,6 @@ const LiftedTable = ({filterValues, setSearch, setYear, setMonth}) => {
     setPageNumber(0);
   }, [debouncedSearch, filterValues.year, filterValues.month]);
 
-  useEffect(() => {
-    if (filterValues.year && !availableMonthsForSelectedYear.includes(Number(filterValues.month)))
-    {
-        setMonth('');
-    }
-  }, [filterValues.year, availableMonthsForSelectedYear, filterValues.month, setMonth]); 
   const containerBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.600', 'gray.400');
   

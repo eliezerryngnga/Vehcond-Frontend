@@ -33,7 +33,7 @@ import { useDebounce } from "use-debounce";
 
 //TODO fetch approved data
 import { useFetchToBeAllotted } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchCirculatedVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
@@ -45,31 +45,37 @@ const CirculationList = ({filterValues, setSearch, setYear, setMonth}) => {
     const [debouncedSearch] = useDebounce(filterValues.search, 500);
     const 
     {
-      data: approvedDatesResponse,
+      data: circulatedDatesResponse,
       isLoading: isLoadingDates,
-    } = useFetchApprovedVehicleDates();
+    } = useFetchCirculatedVehicleDates();
   
-    const availableDates = approvedDatesResponse?.data ?? [];
+    const availableDates = circulatedDatesResponse?.data ?? [];
   
     const availableYears = useMemo(() => {
       return availableDates.map(dateInfo => dateInfo.year);
     }, [availableDates]);
   
+    const monthLabels = {
+      1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+      7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+    };
     const availableMonthsForSelectedYear = useMemo(() => {
-      if(!filterValues.year || availableDates.length === 0)
+      if(!filterValues.year)
       {
-          return [];
+          return Object.keys(monthLabels).map(Number);
+      }
+
+      if( availableDates.length === 0)
+      {
+        return [];
       }
   
       const yearData = availableDates.find(d => d.year == filterValues.year);
   
       return yearData ? yearData.months : [];
-    }, [filterValues.year, availableDates]);
+    }, [filterValues.year, availableDates, monthLabels]);
   
-    const monthLabels = {
-      1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
-      7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
-    };
+    
   const {
     data: response,
     isLoading,
@@ -77,7 +83,7 @@ const CirculationList = ({filterValues, setSearch, setYear, setMonth}) => {
     error,
     isFetching,
     isPreviousData
-  } = useFetchToBeAllotted(pageNumber, pageSize, debouncedSearch);
+  } = useFetchToBeAllotted(pageNumber, pageSize, debouncedSearch, filterValues.year, filterValues.month);
 
   const fetchedData = response?.data?.content ?? [];
   const totalPages = response?.data?.totalPages ?? 0;
@@ -92,12 +98,6 @@ const startIndex = currentPageNumber * currentPageSize;
     setPageNumber(0);
   }, [debouncedSearch, filterValues.year, filterValues.month]);
 
-  useEffect(() => {
-    if (filterValues.year && !availableMonthsForSelectedYear.includes(Number(filterValues.month)))
-    {
-        setMonth('');
-    }
-  }, [filterValues.year, availableMonthsForSelectedYear, filterValues.month, setMonth]); 
   const containerBg = useColorModeValue('white', 'gray.800');
   const textColor = useColorModeValue('gray.600', 'gray.400');
 

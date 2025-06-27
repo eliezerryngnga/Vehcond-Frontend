@@ -217,7 +217,7 @@ const OfficeRecords = ({
         label="Designation of officer to which the vehicle is allocated"
       />
       <TextAreaField name="premises" label="Premises" />
-      <TextAreaField name="address1" label="Address 1" isRequired={false} />
+      <TextAreaField name="address1" label="Address 1" />
       <TextAreaField name="address2" label="Address 2" isRequired={false} />
       <InputField
         name="directorateLetterNo"

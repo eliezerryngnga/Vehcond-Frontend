@@ -31,47 +31,53 @@ import {
 
 import { useDebounce } from "use-debounce";
 
-//TODO fetch data under vcc
 import { useFetchPriceFixedByTc } from '../../hooks/transportActions'; 
-import { useFetchApprovedVehicleDates } from '../../hooks/dateQueries';
+import { useFetchCondemVehicleDates } from '../../hooks/dateQueries';
 
 import SearchInput from "../../components/core/SearchInput"
 
-
-// Props: onOpenModal (function to call when an action button is clicked)
 const CondemnationTable = ({filterValues, setSearch, setYear, setMonth}) => {
 
    const [pageSize, setPageSize] = useState(10);
     const [pageNumber, setPageNumber] = useState(0);
   
     const [debouncedSearch] = useDebounce(filterValues.search, 500);
+
     const 
     {
-      data: approvedDatesResponse,
+      data: condemnedDatesResponse,
       isLoading: isLoadingDates,
-    } = useFetchApprovedVehicleDates();
+    } = useFetchCondemVehicleDates();
   
-    const availableDates = approvedDatesResponse?.data ?? [];
+    const availableDates = condemnedDatesResponse?.data ?? [];
   
     const availableYears = useMemo(() => {
       return availableDates.map(dateInfo => dateInfo.year);
     }, [availableDates]);
   
+    const monthLabels = {
+        1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+        7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
+    };
+
     const availableMonthsForSelectedYear = useMemo(() => {
       if(!filterValues.year || availableDates.length === 0)
       {
-          return [];
+        return Object.keys(monthLabels).map(Number);
+      }
+
+      if(availableDates.length === 0)
+      {
+        return [];
       }
   
       const yearData = availableDates.find(d => d.year == filterValues.year);
   
       return yearData ? yearData.months : [];
-    }, [filterValues.year, availableDates]);
+    }, [filterValues.year, availableDates, monthLabels]);
   
-    const monthLabels = {
-      1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
-      7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December'
-    };
+ 
+
   const {
     data: response,
     isLoading,
@@ -79,7 +85,7 @@ const CondemnationTable = ({filterValues, setSearch, setYear, setMonth}) => {
     error,
     isFetching,
     isPreviousData
-  } = useFetchPriceFixedByTc(pageNumber, pageSize, debouncedSearch);
+  } = useFetchPriceFixedByTc(pageNumber, pageSize, debouncedSearch, filterValues.year, filterValues.month);
 
   // --- Derived Data specific to this table ---
   const fetchedData = response?.data?.content ?? [];
@@ -95,12 +101,7 @@ const CondemnationTable = ({filterValues, setSearch, setYear, setMonth}) => {
      setPageNumber(0);
    }, [debouncedSearch, filterValues.year, filterValues.month]);
  
-   useEffect(() => {
-     if (filterValues.year && !availableMonthsForSelectedYear.includes(Number(filterValues.month)))
-     {
-         setMonth('');
-     }
-   }, [filterValues.year, availableMonthsForSelectedYear, filterValues.month, setMonth]); 
+   
    const containerBg = useColorModeValue('white', 'gray.800');
    const textColor = useColorModeValue('gray.600', 'gray.400');
    
@@ -167,7 +168,9 @@ const CondemnationTable = ({filterValues, setSearch, setYear, setMonth}) => {
                             maxW="130px"
                             value={filterValues.month}
                             onChange={(e) => setMonth(e.target.value)}
-                            isDisabled={!filterValues.year || availableMonthsForSelectedYear.length === 0}
+                            isDisabled={
+                                !filterValues.year || 
+                                availableMonthsForSelectedYear.length === 0}
                         >
                             {availableMonthsForSelectedYear.map(monthValue => <option key={monthValue} value={monthValue}>{monthLabels[monthValue]}</option>)}
                         </Select>
